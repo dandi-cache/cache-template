@@ -12,6 +12,8 @@ Primarily for use by developers.
 
 If you only plan to use this cache infrequently or from disparate locations, you can directly download the latest version of the cache as a minified and compressed JSON file:
 
+> **Note:** Throughout this template, `<cache-name>` refers to the hyphenated repository name (e.g., `my-cache`) and `<cache_name>` refers to the underscored form used for file and variable names (e.g., `my_cache`).
+
 ### Python API (recommended)
 
 ```python
