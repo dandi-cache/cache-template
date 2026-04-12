@@ -1,3 +1,4 @@
 *.idea
 sourcedata/*
+!sourcedata/README.md
 .DS_Store
