@@ -2,6 +2,8 @@ name: Issue
 description: Report an issue or request a feature.
 assignees:
   - CodyCBakerPhD
+projects:
+  - dandi-cache/1
 body:
   - type: textarea
     id: description
