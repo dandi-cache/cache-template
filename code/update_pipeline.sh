@@ -42,8 +42,15 @@ BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 # register it as an input subdataset. It is cloned into the derivatives dataset and pinned
 # in the provenance of every run. Leave it empty if this cache has no upstream input
 # dataset; the subdataset handling below is then skipped.
+#
+# INPUT_SUBDATASET_BRANCH selects which branch of the input dataset to track. dandi-cache
+# datasets publish their data on a dedicated branch (their default branch holds only code),
+# so this defaults to `derivatives`; set it to whatever branch the upstream cache publishes
+# to (e.g. `min`). It is recorded in `.gitmodules` so `submodule update --remote` follows
+# that branch on every run.
 INPUT_SUBDATASET_URL=""  # e.g. https://github.com/dandi-cache/<input-dataset-name>.git
 INPUT_SUBDATASET_PATH="sourcedata/<input-dataset-name>"
+INPUT_SUBDATASET_BRANCH="derivatives"
 
 DS="${RUNNER_TEMP:-/tmp}/derivatives-dataset"
 DISTDIR="${RUNNER_TEMP:-/tmp}/dist-publish"
@@ -71,6 +78,11 @@ else
   datalad create --no-annex "${DS}"
   if [ -n "${INPUT_SUBDATASET_URL}" ]; then
     datalad clone -d "${DS}" "${INPUT_SUBDATASET_URL}" "${DS}/${INPUT_SUBDATASET_PATH}"
+    # Track the input dataset's published-data branch (its default branch holds only code),
+    # and record that branch in `.gitmodules` so `submodule update --remote` follows it.
+    git -C "${DS}/${INPUT_SUBDATASET_PATH}" fetch origin "${INPUT_SUBDATASET_BRANCH}"
+    git -C "${DS}/${INPUT_SUBDATASET_PATH}" checkout -B "${INPUT_SUBDATASET_BRANCH}" "origin/${INPUT_SUBDATASET_BRANCH}"
+    git -C "${DS}" config -f .gitmodules "submodule.${INPUT_SUBDATASET_PATH}.branch" "${INPUT_SUBDATASET_BRANCH}"
   fi
   datalad save -d "${DS}" -m "Initialize derivatives dataset"
 fi
