@@ -1,9 +1,7 @@
 *.idea
 __pycache__/
+# The `main` branch holds only code; generated source/output data live on the
+# `derivatives` and `dist` branches, so keep them out of `main`.
 sourcedata/*
-!sourcedata/README.md
-# The `main` branch holds only code; generated outputs live on the `derivatives` and
-# `dist` branches, so keep them out of `main`.
 derivatives/*
-!derivatives/README.md
 .DS_Store

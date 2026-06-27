@@ -16,7 +16,10 @@ def _run(base_directory: pathlib.Path, limit: int | None) -> None:
 
     records: list = []
 
-    output_file_path = base_directory / "derivatives" / "<cache_name>.jsonl"
+    derivatives_directory = base_directory / "derivatives"
+    derivatives_directory.mkdir(parents=True, exist_ok=True)
+
+    output_file_path = derivatives_directory / "<cache_name>.jsonl"
     with output_file_path.open(mode="w") as file_stream:
         file_stream.writelines(f"{json.dumps(record)}\n" for record in records)
 
