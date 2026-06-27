@@ -61,7 +61,7 @@ This will minimize data overhead by only loading the most recent changes.
 This cache keeps the generated results off the code branch and records every update with full provenance. It uses three branches:
 
 - **`main`** holds only the code (this branch): the update logic, the runtime container definition, and the CI workflows.
-- **`derivatives`** is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance — the exact command, the input subdataset commit, the output diff, and the runtime container image digest — and the history is retained.
+- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance — the exact command, the input subdataset commit, the output diff, and the runtime container image digest — and the history is retained.
 - **`dist`** is the lightweight, force-recreated publication artifact consumed by downstream users (the compressed JSON Lines file linked above).
 
 The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) that holds only the pinned runtime environment. The code and the dataset are bind-mounted in at run time, so a single image serves any revision of the code, and only the image digest is stored in the dataset (a small text file) — the registry holds the image bytes.
