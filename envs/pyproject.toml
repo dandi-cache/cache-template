@@ -4,4 +4,10 @@ version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
     "pyyaml",
+    # DataLad and the container extension drive the provenance-tracked pipeline
+    # (see code/update_pipeline.sh). This same file is baked into the runtime image
+    # (containers/Dockerfile), so it must list every dependency code/update.py needs.
+    "datalad",
+    "datalad-container",
+    # TODO: add this cache's processing dependencies used by code/update.py.
 ]
