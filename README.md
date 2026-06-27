@@ -58,17 +58,19 @@ This will minimize data overhead by only loading the most recent changes.
 
 ## How it works
 
-This cache keeps the generated results off the code branch and records every update with full provenance. It uses three branches:
+This cache template demonstrates how generated results of the code branch and records every update with full provenance.
 
-- **`main`** holds only the code (this branch): the update logic, the runtime container definition, and the CI workflows.
-- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance — the exact command, the input subdataset commit, the output diff, and the runtime container image digest — and the history is retained.
-- **`dist`** is the lightweight, force-recreated publication artifact consumed by downstream users (the compressed JSON Lines file linked above).
+It uses three branches:
 
-The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) that holds only the pinned runtime environment. The code and the dataset are bind-mounted in at run time, so a single image serves any revision of the code, and only the image digest is stored in the dataset (a small text file) — the registry holds the image bytes.
+- **`main`** holds only the code of the update logic, the runtime container definition, and the CI workflows (including building and distributing the container images).
+- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance of the exact command, the input subdataset commit, the output diff, and the runtime container image digest.
+- **`dist`** is the lightweight publication artifact consumed by downstream users and preferred for one-time downloads.
 
-The orchestration lives in [`code/update_pipeline.sh`](code/update_pipeline.sh); the actual cache logic lives in [`code/update.py`](code/update.py) (full output) and [`code/compress.py`](code/compress.py) (consumer artifact), both of which run in any environment.
+The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) that holds only the pinned runtime environment.
 
-The repository is described as a [BIDS study dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset) via [`dataset_description.json`](dataset_description.json) (`DatasetType: "study"`). It is kept on `main` and copied by the pipeline onto the `derivatives` and `dist` branches, so every published branch is self-describing.
+The orchestration lives in [`code/update_pipeline.sh`](code/update_pipeline.sh); the actual cache logic lives in [`code/update.py`](code/update.py).
+
+The repository is described as a [BIDS study dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset) via [`dataset_description.json`](dataset_description.json) (`DatasetType: "study"`). Future enhancements may improve the provenance tracking through this mechanism in line with BEP028.
 
 
 
@@ -77,9 +79,11 @@ The repository is described as a [BIDS study dataset](https://bids-specification
 After generating a repository from this template:
 
 1. Replace every `<cache-name>` / `<cache_name>` placeholder and resolve the `TODO` markers (the update schedule, the cache logic, the input dataset, the notification recipients). Fill in the placeholder fields in [`dataset_description.json`](dataset_description.json) (`Name`, `License`, `Authors`).
-2. Add this cache's processing dependencies to [`envs/pyproject.toml`](envs/pyproject.toml). That file is the single source of truth for both the local environment and the published container image.
-3. Configure the repository secrets used by the workflows: `_GITHUB_API_KEY` (a token allowed to push to this repository and to push/pull packages), `MAIL_USERNAME`, and `MAIL_PASSWORD`.
-4. Push to `main`. The **Build and Upload Container** workflow publishes the runtime image, and the **Update** workflow runs the pipeline on its schedule (or via *Run workflow*), creating the `derivatives` and `dist` branches on the first run.
+2. Add this cache's processing dependencies to [`envs/pyproject.toml`](envs/pyproject.toml).
+3. Specify the [`code/update.py`](code/update.py) protocol.
+4. Delete this section from the local README.
+
+
 
 ### Local development
 
