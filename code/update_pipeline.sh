@@ -16,7 +16,7 @@
 # are bind-mounted in (the image holds no code), and only the image digest is stored in the
 # dataset (a small text file), so it stays annex-free and ghcr holds the bytes.
 #
-# code/update.py and code/minify.py are the actual code and run in any environment; this
+# code/update.py and code/compress.py are the actual code and run in any environment; this
 # script is only the CI orchestration around them.
 #
 # Required environment variables:
@@ -121,9 +121,9 @@ datalad containers-run -n pipeline --explicit \
 git -C "${DS}" push "${REPO_URL}" HEAD:derivatives
 
 # Build and force-publish the consumer-facing `dist` artifact from a fresh repo.
-uv run --project "${WORKSPACE}/envs" python "${WORKSPACE}/code/minify.py" --base-directory "${DS}"
+uv run --project "${WORKSPACE}/envs" python "${WORKSPACE}/code/compress.py" --base-directory "${DS}"
 mkdir -p "${DISTDIR}/derivatives"
-cp "${DS}"/derivatives/*.min.json.gz "${DISTDIR}/derivatives/"
+cp "${DS}"/derivatives/*.jsonl.gz "${DISTDIR}/derivatives/"
 cp "${WORKSPACE}/dataset_description.json" "${DISTDIR}/dataset_description.json"
 git -C "${DISTDIR}" init -q -b dist
 git -C "${DISTDIR}" config user.name "${BOT_NAME}"

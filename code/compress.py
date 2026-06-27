@@ -1,26 +1,21 @@
 import argparse
 import gzip
-import json
 import pathlib
+import shutil
 
-import yaml
 
+def _compress(file_path: pathlib.Path, /) -> None:
 
-def _minify(file_path: pathlib.Path, /) -> None:
-
-    with file_path.open(mode="r") as file_stream:
-        file_content = yaml.safe_load(file_stream)
-
-    minified_file_path = file_path.parent / f"{file_path.stem}.min.json.gz"
-    with gzip.open(filename=minified_file_path, mode="wt", encoding="utf-8") as file_stream:
-        json.dump(obj=file_content, fp=file_stream)
+    compressed_file_path = file_path.parent / f"{file_path.name}.gz"
+    with file_path.open(mode="rb") as source_stream, gzip.open(compressed_file_path, mode="wb") as target_stream:
+        shutil.copyfileobj(fsrc=source_stream, fdst=target_stream)
 
 
 if __name__ == "__main__":
     default_base_directory = pathlib.Path(__file__).parent.parent
 
     parser = argparse.ArgumentParser(
-        description="Minify the <cache-name> derivatives into compressed JSON for distribution."
+        description="Compress the <cache-name> JSON Lines derivatives for distribution."
     )
     parser.add_argument(
         "--base-directory",
@@ -34,5 +29,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     derivatives_dir = args.base_directory / "derivatives"
-    for yaml_file_path in derivatives_dir.glob("*.yaml"):
-        _minify(yaml_file_path)
+    for jsonl_file_path in derivatives_dir.glob("*.jsonl"):
+        _compress(jsonl_file_path)

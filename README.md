@@ -12,7 +12,7 @@ Primarily for use by developers.
 
 ## One-time use
 
-If you only plan to use this cache infrequently or from disparate locations, you can directly download the latest version of the cache as a minified and compressed JSON file from the `dist` branch:
+If you only plan to use this cache infrequently or from disparate locations, you can directly download the latest version of the cache as a compressed [JSON Lines](https://jsonlines.org/) file from the `dist` branch:
 
 ### Python API (recommended)
 
@@ -22,15 +22,16 @@ import json
 
 import requests
 
-url = "https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.min.json.gz"
+url = "https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.jsonl.gz"
 response = requests.get(url)
-<cache_name> = json.loads(gzip.decompress(data=response.content))
+lines = gzip.decompress(data=response.content).decode("utf-8").splitlines()
+<cache_name> = [json.loads(line) for line in lines]
 ```
 
 ### Save to file
 
 ```bash
-curl https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.min.json.gz -o <cache_name>.min.json.gz
+curl https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.jsonl.gz -o <cache_name>.jsonl.gz
 ```
 
 
@@ -61,11 +62,11 @@ This cache keeps the generated results off the code branch and records every upd
 
 - **`main`** holds only the code (this branch): the update logic, the runtime container definition, and the CI workflows.
 - **`derivatives`** is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance — the exact command, the input subdataset commit, the output diff, and the runtime container image digest — and the history is retained.
-- **`dist`** is the lightweight, force-recreated publication artifact consumed by downstream users (the minified, compressed file linked above).
+- **`dist`** is the lightweight, force-recreated publication artifact consumed by downstream users (the compressed JSON Lines file linked above).
 
 The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) that holds only the pinned runtime environment. The code and the dataset are bind-mounted in at run time, so a single image serves any revision of the code, and only the image digest is stored in the dataset (a small text file) — the registry holds the image bytes.
 
-The orchestration lives in [`code/update_pipeline.sh`](code/update_pipeline.sh); the actual cache logic lives in [`code/update.py`](code/update.py) (full output) and [`code/minify.py`](code/minify.py) (consumer artifact), both of which run in any environment.
+The orchestration lives in [`code/update_pipeline.sh`](code/update_pipeline.sh); the actual cache logic lives in [`code/update.py`](code/update.py) (full output) and [`code/compress.py`](code/compress.py) (consumer artifact), both of which run in any environment.
 
 The repository is described as a [BIDS study dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset) via [`dataset_description.json`](dataset_description.json) (`DatasetType: "study"`). It is kept on `main` and copied by the pipeline onto the `derivatives` and `dist` branches, so every published branch is self-describing.
 
