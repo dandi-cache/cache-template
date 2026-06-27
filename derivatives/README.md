@@ -6,3 +6,5 @@ On the `main` branch (this branch) it contains only this README — generated ou
 
 - **`derivatives` branch** — the full output (`<cache_name>.yaml`) tracked as a persistent DataLad dataset, with the complete history and provenance of every run.
 - **`dist` branch** — the minified, compressed consumer artifact (`<cache_name>.min.json.gz`) produced by `code/minify.py`. This branch is force-recreated on every run and is what downstream users download (see the top-level `README.md`).
+
+Both branches also carry the study-level `dataset_description.json` (copied from `main` by `code/update_pipeline.sh`) so the published data is self-describing.
