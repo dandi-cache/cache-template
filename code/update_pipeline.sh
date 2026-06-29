@@ -43,7 +43,11 @@ BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 #   1. Upstream DataLad dataset (input subdataset): set INPUT_SUBDATASET_URL to register an
 #      upstream dataset as an input subdataset. It is cloned into the derivatives dataset and
 #      pinned in the provenance of every run via `--input`, so each result records the exact
-#      input commit it was computed from.
+#      input commit it was computed from. INPUT_SUBDATASET_BRANCH selects which branch of the
+#      input dataset to track: dandi-cache datasets publish their data on a dedicated branch
+#      (their default branch holds only code), so this defaults to `derivatives`; set it to
+#      whatever branch the upstream cache publishes to (e.g. `min`). It is recorded in
+#      `.gitmodules` so `submodule update --remote` follows that branch on every run.
 #   2. Local `sourcedata` directory: inputs live under the dataset's own `sourcedata/` (e.g.
 #      committed fixtures). Leave INPUT_SUBDATASET_URL empty; declare the relevant paths as
 #      `--input` below if you want them pinned in provenance.
@@ -58,6 +62,7 @@ BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 # skipped.
 INPUT_SUBDATASET_URL=""  # e.g. https://github.com/dandi-cache/<input-dataset-name>.git
 INPUT_SUBDATASET_PATH="sourcedata/<input-dataset-name>"
+INPUT_SUBDATASET_BRANCH="derivatives"
 
 DS="${RUNNER_TEMP:-/tmp}/derivatives-dataset"
 DISTDIR="${RUNNER_TEMP:-/tmp}/dist-publish"
@@ -85,6 +90,11 @@ else
   datalad create --no-annex "${DS}"
   if [ -n "${INPUT_SUBDATASET_URL}" ]; then
     datalad clone -d "${DS}" "${INPUT_SUBDATASET_URL}" "${DS}/${INPUT_SUBDATASET_PATH}"
+    # Track the input dataset's published-data branch (its default branch holds only code),
+    # and record that branch in `.gitmodules` so `submodule update --remote` follows it.
+    git -C "${DS}/${INPUT_SUBDATASET_PATH}" fetch origin "${INPUT_SUBDATASET_BRANCH}"
+    git -C "${DS}/${INPUT_SUBDATASET_PATH}" checkout -B "${INPUT_SUBDATASET_BRANCH}" "origin/${INPUT_SUBDATASET_BRANCH}"
+    git -C "${DS}" config -f .gitmodules "submodule.${INPUT_SUBDATASET_PATH}.branch" "${INPUT_SUBDATASET_BRANCH}"
   fi
   datalad save -d "${DS}" -m "Initialize derivatives dataset"
 fi
