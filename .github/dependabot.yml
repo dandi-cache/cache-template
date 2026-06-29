@@ -4,6 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "quarterly"
+    labels: []
     reviewers:
       - "CodyCBakerPhD"
     assignees:
