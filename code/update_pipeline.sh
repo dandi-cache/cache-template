@@ -38,10 +38,24 @@ GITHUB_SHA="${GITHUB_SHA:-unknown}"
 BOT_NAME="github-actions[bot]"
 BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 
-# TODO: if this cache derives from an upstream DataLad dataset, set INPUT_SUBDATASET_URL to
-# register it as an input subdataset. It is cloned into the derivatives dataset and pinned
-# in the provenance of every run. Leave it empty if this cache has no upstream input
-# dataset; the subdataset handling below is then skipped.
+# TODO: pick this cache's input mode. There are three first-class cases:
+#
+#   1. Upstream DataLad dataset (input subdataset): set INPUT_SUBDATASET_URL to register an
+#      upstream dataset as an input subdataset. It is cloned into the derivatives dataset and
+#      pinned in the provenance of every run via `--input`, so each result records the exact
+#      input commit it was computed from.
+#   2. Local `sourcedata` directory: inputs live under the dataset's own `sourcedata/` (e.g.
+#      committed fixtures). Leave INPUT_SUBDATASET_URL empty; declare the relevant paths as
+#      `--input` below if you want them pinned in provenance.
+#   3. First-in-chain / no input dataset: this cache fetches its own inputs over the network
+#      at run time (e.g. queries a remote API or archive). Leave INPUT_SUBDATASET_URL empty.
+#      There is no input dataset to pin, so no `--input` provenance is declared. NOTE: the
+#      processing container therefore REQUIRES outbound network access at run time; the
+#      `--call-fmt` below must not isolate the network, and the runtime environment must
+#      allow the container to reach the upstream source.
+#
+# Leave INPUT_SUBDATASET_URL empty for cases 2 and 3; the subdataset handling below is then
+# skipped.
 INPUT_SUBDATASET_URL=""  # e.g. https://github.com/dandi-cache/<input-dataset-name>.git
 INPUT_SUBDATASET_PATH="sourcedata/<input-dataset-name>"
 
@@ -75,22 +89,29 @@ else
   datalad save -d "${DS}" -m "Initialize derivatives dataset"
 fi
 
-git -C "${DS}" config user.name "${BOT_NAME}"
-git -C "${DS}" config user.email "${BOT_EMAIL}"
-mkdir -p "${DS}/derivatives"
+# Establish the dataset as the working directory for every operation that follows. All
+# subsequent dataset paths are dataset-relative from here, so a `datalad save`/`status`
+# argument can never resolve against WORKSPACE (the code checkout) and silently fall outside
+# the dataset. This is the only `cd` in the script.
+cd "${DS}"
+
+git config user.name "${BOT_NAME}"
+git config user.email "${BOT_EMAIL}"
+mkdir -p derivatives
 
 # Carry the study-level BIDS dataset_description.json (kept on the code branch) onto the
-# derivatives dataset so the published dataset is self-describing.
-cp "${WORKSPACE}/dataset_description.json" "${DS}/dataset_description.json"
-datalad save -d "${DS}" -m "Update dataset_description.json" dataset_description.json || true
+# derivatives dataset so the published dataset is self-describing. The save uses a
+# dataset-relative path now that the dataset is the working directory; no `|| true` mask, so
+# a genuine save failure fails the run loudly (`datalad save` already exits 0 when there is
+# nothing to save).
+cp "${WORKSPACE}/dataset_description.json" dataset_description.json
+datalad save -m "Update dataset_description.json" dataset_description.json
 
 # Advance the input subdataset to its latest commit and record the pointer.
 if [ -n "${INPUT_SUBDATASET_URL}" ]; then
-  git -C "${DS}" submodule update --init --remote "${INPUT_SUBDATASET_PATH}"
-  datalad save -d "${DS}" -m "Update input subdataset to latest" "${INPUT_SUBDATASET_PATH}" || true
+  git submodule update --init --remote "${INPUT_SUBDATASET_PATH}"
+  datalad save -m "Update input subdataset to latest" "${INPUT_SUBDATASET_PATH}"
 fi
-
-cd "${DS}"
 
 # Pin the published image digest and register it as a container. Only the digest is stored
 # (a small text file), so the dataset stays annex-free; ghcr holds the image bytes.
@@ -98,15 +119,34 @@ docker pull "${IMAGE}"
 DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "${IMAGE}")
 mkdir -p .datalad/environments/pipeline
 printf '%s\n' "${DIGEST}" > .datalad/environments/pipeline/image
+# The {img}/{cmd} placeholders and the $-expansions are interpolated by datalad at run time,
+# not by this shell, so they are intentionally left unexpanded here.
+# shellcheck disable=SC2016
 datalad containers-add pipeline --update \
   --image .datalad/environments/pipeline/image \
   --call-fmt 'docker run --rm -u "$(id -u):$(id -g)" -e HOME=/tmp -v "$PWD":/tmp -w /tmp -v "$WORKSPACE/code":/code:ro "$(cat {img})" {cmd}'
 datalad save -m "Pin runtime container image to ${DIGEST}" .datalad
 
+# Fail fast if the dataset is not clean before the recorded run. `containers-run` requires a
+# clean tree to detect the command's changes and otherwise aborts with a generic "clean
+# dataset required" error; surfacing the offending paths here is far easier to diagnose.
+DATASET_STATUS=$(datalad status)
+if [ -n "${DATASET_STATUS}" ]; then
+  echo "ERROR: derivatives dataset is not clean before containers-run." >&2
+  echo "Offending paths:" >&2
+  echo "${DATASET_STATUS}" >&2
+  exit 1
+fi
+
 # Run the processing inside the published image. The image provides only the environment;
 # the code and the dataset are bind-mounted in (see the call format). `--explicit` keeps
 # datalad from clearing the outputs first, which is required when the outputs are also prior
 # state (input) of the next incremental run.
+#
+# Input provenance depends on the input mode selected above: with an INPUT_SUBDATASET_URL the
+# subdataset is pinned via `--input`; in the first-in-chain / no-input-dataset mode there is
+# nothing to pin, so no `--input` is declared and the container fetches its own inputs over
+# the network (which therefore must be reachable from inside the container at run time).
 RUN_INPUT_ARGS=()
 if [ -n "${INPUT_SUBDATASET_URL}" ]; then
   RUN_INPUT_ARGS=(--input "${INPUT_SUBDATASET_PATH}")
