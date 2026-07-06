@@ -53,6 +53,8 @@ jobs:
           tags: |
             ghcr.io/dandi-cache/<cache-name>:latest
             ghcr.io/dandi-cache/<cache-name>:${{ github.sha }}
+          build-args: |
+            SOURCE_REPOSITORY_URL=${{ github.server_url }}/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

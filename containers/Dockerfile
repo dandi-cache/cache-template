@@ -12,6 +12,12 @@
 # it provides Python and a recent git-annex-standalone, which DataLad requires for the annex-backed dataset and its provenance.
 FROM neurodebian:trixie
 
+# GHCR associates a pushed image with its source repository through the org.opencontainers.image.source label.
+# The CI workflow passes the actual repository URL as a build argument, so caches instantiated from this template are linked automatically.
+ARG SOURCE_REPOSITORY_URL="https://github.com/dandi-cache/cache-template"
+LABEL org.opencontainers.image.source="${SOURCE_REPOSITORY_URL}"
+LABEL org.opencontainers.image.description="Pinned, reproducible runtime environment for this DANDI cache pipeline."
+
 # git-annex (for DataLad / annex provenance), Python, and the basics for cloning and TLS.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
