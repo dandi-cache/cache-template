@@ -16,6 +16,23 @@ def _run(base_directory: pathlib.Path, limit: int | None) -> None:
     #      case). If you fetch inputs over the network, remember the processing container
     #      must have outbound network access at run time.
     #
+    # Lessons from caches that fetch from the public DANDI S3 bucket
+    # (see dandi-cache/content-id-to-dandiset-paths):
+    #   - Objects that appear in a bucket listing can still deny an anonymous GetObject:
+    #     embargoed Dandisets list their manifests publicly but return AccessDenied, and an
+    #     object can be deleted between listing and fetching (NoSuchKey). Catch
+    #     botocore.exceptions.ClientError, skip those two error codes with a log line, and
+    #     re-raise anything else — do not let an expected upstream state fail the whole run.
+    #   - When downloading with a ThreadPoolExecutor, size the client's connection pool to
+    #     the worker count (botocore's default pool of 10 makes surplus workers redo the
+    #     TCP/TLS handshake on every request) and use retries={"mode": "standard"}:
+    #     botocore.config.Config(signature_version=botocore.UNSIGNED,
+    #     max_pool_connections=max_workers, retries={"mode": "standard"}).
+    #   - Prefer JSON inputs over YAML wherever the source offers both (the DANDI archive
+    #     publishes assets.jsonld next to every assets.yaml): parsing large YAML in Python
+    #     is GIL-bound and orders of magnitude slower than json.loads, and threads do not
+    #     parallelize it — it can dominate the entire run time.
+    #
     # `limit` is an optional batch size for incremental, resumable runs: process at most
     # `limit` new items per invocation and skip those already recorded in the derivatives.
     # Remove it (and the `--limit` plumbing in update_pipeline.sh and update.yml) if this
