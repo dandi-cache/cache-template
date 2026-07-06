@@ -14,7 +14,9 @@ def _run(base_directory: pathlib.Path, limit: int | None) -> None:
     #   2. a local `sourcedata` directory committed in the dataset, or
     #   3. fetched directly over the network here (the first-in-chain / no-input-dataset
     #      case). If you fetch inputs over the network, remember the processing container
-    #      must have outbound network access at run time.
+    #      must have outbound network access at run time. For inputs pulled from the
+    #      public DANDI S3 bucket, see .claude/skills/dandi-s3-network-inputs/SKILL.md
+    #      for lessons on access errors, connection pooling, and manifest formats.
     #
     # `limit` is an optional batch size for incremental, resumable runs: process at most
     # `limit` new items per invocation and skip those already recorded in the derivatives.

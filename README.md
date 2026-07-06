@@ -97,7 +97,17 @@ After generating a repository from this template:
 1. Replace every `<cache-name>` / `<cache_name>` placeholder and resolve the `TODO` markers (the update schedule, the cache logic, the input dataset, the notification recipients). Fill in the placeholder fields in [`dataset_description.json`](dataset_description.json) (`Name`, `Authors`; `License` defaults to `CC-BY-4.0` — change it if this cache uses a different license).
 2. Add this cache's processing dependencies to [`envs/pyproject.toml`](envs/pyproject.toml).
 3. Specify the [`code/update.py`](code/update.py) protocol.
-4. Remove the template scaffolding from the local README — these sections document the template itself, not the generated cache. Delete the **How it works** section (including its **Input modes** subsection, once you have chosen and wired up an input mode) and this **Repository setup** section (including the **Local development** subsection below).
+4. Remove the template scaffolding — these pieces document the template itself, not the generated cache. Delete the **How it works** section (including its **Input modes** subsection, once you have chosen and wired up an input mode), this **Repository setup** section (including the **Set up with Claude Code** and **Local development** subsections below), and the `.claude/skills/setup-cache` skill (plus `.claude/skills/dandi-s3-network-inputs` if this cache does not fetch inputs from the DANDI S3 bucket).
+
+
+
+### Set up with Claude Code
+
+This template ships [Claude Code](https://claude.com/claude-code) skills under [`.claude/skills/`](.claude/skills) that encode the steps above (`setup-cache`) and hard-won guidance for caches that fetch inputs from the public DANDI S3 bucket (`dandi-s3-network-inputs`). To use them, open a Claude Code session in the freshly generated repository and start from a prompt like:
+
+> Set up this new DANDI cache using the setup-cache skill. The cache should `<describe what this cache computes, where its inputs come from, and how often it should update>`. Open the result as a single setup PR.
+
+The skill removes this section, along with the rest of the template scaffolding, as part of that first setup PR.
 
 
 
