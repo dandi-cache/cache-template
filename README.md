@@ -44,12 +44,24 @@ If you plan on using this cache regularly, clone the `dist` branch of this repos
 git clone --branch dist https://github.com/dandi-cache/<cache-name>.git
 ```
 
+Or, if you prefer [DataLad](https://www.datalad.org/) (options after the URL are passed through to `git clone`):
+
+```bash
+datalad clone https://github.com/dandi-cache/<cache-name>.git --branch dist
+```
+
 Then set up a CRON on your system to pull the latest version of the cache at your desired frequency.
 
 For example, through `crontab -e`, add:
 
 ```bash
 0 0 * * * git -C /path/to/<cache-name> pull
+```
+
+Or, with DataLad:
+
+```bash
+0 0 * * * datalad update -d /path/to/<cache-name> --how merge
 ```
 
 This will minimize data overhead by only loading the most recent changes.
