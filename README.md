@@ -89,7 +89,3 @@ After generating a repository from this template, the full setup checklist lives
 Open a [Claude Code](https://claude.com/claude-code) session in the freshly generated repository and start from a prompt like:
 
 > Set up this new DANDI cache using the setup-cache skill. The cache should `<describe what this cache computes, where its inputs come from, and how often it should update>`. Open the result as a single setup PR.
-
-### Manually
-
-The skill files are plain Markdown — follow the checklist directly. A companion skill, [`dandi-s3-network-inputs`](.claude/skills/dandi-s3-network-inputs/SKILL.md), collects lessons for caches that fetch their inputs from the public DANDI S3 bucket.
