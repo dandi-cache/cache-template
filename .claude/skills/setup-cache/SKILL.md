@@ -72,8 +72,8 @@ same setup PR:
 
 - The README **How it works** section — the generated cache's README should describe
   only the cache itself and how to consume it.
-- The README **Repository setup** section (including its **With Claude Code** and
-  **Manually** subsections).
+- The README **Repository setup** section (including its **With Claude Code**
+  subsection).
 - `.claude/skills/setup-cache/` — this skill has no purpose once setup is done.
 - `.claude/skills/dandi-s3-network-inputs/` — only if this cache does **not** fetch
   inputs from the DANDI S3 bucket; keep it when input mode 3 uses that bucket. If
