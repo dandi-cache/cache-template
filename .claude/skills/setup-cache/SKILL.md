@@ -27,30 +27,39 @@ exists before setup.)
 
 ## 2. Choose the input mode
 
-Select one of the three input modes in `code/update_pipeline.sh` (the
-`INPUT_SUBDATASET_URL` TODO) and `code/update.py`:
+Select one of the three input modes; the `INPUT_SUBDATASET_URL` / `INPUT_SUBDATASET_PATH`
+/ `INPUT_SUBDATASET_BRANCH` variables in `code/update_pipeline.sh` (the input-mode TODO)
+drive the choice, and `code/update.py` reads accordingly:
 
 1. **Upstream DataLad dataset.** Set `INPUT_SUBDATASET_URL` to register an upstream
    dataset as an input subdataset. It is cloned into the `derivatives` dataset and
    pinned via `--input` in the provenance of every run, so each result records the
-   exact input commit it was computed from.
+   exact input commit it was computed from. `INPUT_SUBDATASET_BRANCH` selects which
+   branch of the input dataset to track: dandi-cache datasets publish their data on a
+   dedicated branch (their default branch holds only code), so it defaults to
+   `derivatives` — set it to whatever branch the upstream cache publishes to (e.g.
+   `min`). It is recorded in `.gitmodules` so `submodule update --remote` follows that
+   branch on every run.
 2. **Local `sourcedata` directory.** Inputs live under the dataset's own `sourcedata/`
-   (e.g. committed fixtures). Leave `INPUT_SUBDATASET_URL` empty.
+   (e.g. committed fixtures). Leave `INPUT_SUBDATASET_URL` empty; optionally declare the
+   relevant paths as `--input` in the `containers-run` call to pin them in provenance.
 3. **First-in-chain / no input dataset.** The cache fetches its own inputs over the
    network at run time (e.g. it queries a remote API or archive). Leave
    `INPUT_SUBDATASET_URL` empty: there is no input dataset to pin, so no `--input`
    provenance is declared. Because the inputs are pulled at run time, the processing
    container requires outbound network access — the runtime environment must allow the
-   container to reach the upstream source. If the inputs come from the public DANDI S3
-   bucket, read the `dandi-s3-network-inputs` skill before writing that code.
+   container to reach the upstream source, and the `--call-fmt` in `update_pipeline.sh`
+   must not isolate the container's network. If the inputs come from the public DANDI
+   S3 bucket, read the `dandi-s3-network-inputs` skill before writing that code.
 
 ## 3. Implement the cache logic
 
 - Implement `_run` in `code/update.py`: read the inputs, compute the cache, and write the
   result into `derivatives/<cache_name>.jsonl` as JSON Lines.
-- Decide whether to keep `--limit`: keep it for incremental, resumable runs; remove it
-  (and its plumbing in `update_pipeline.sh` and `update.yml`) if the cache is recomputed
-  in full on every run.
+- Decide whether to keep `--limit`. It is a batch size for incremental, resumable runs:
+  process at most `limit` new items per invocation and skip those already recorded in
+  the derivatives. Remove it (and its plumbing in `update_pipeline.sh` and `update.yml`)
+  if the cache is recomputed in full on every run.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:

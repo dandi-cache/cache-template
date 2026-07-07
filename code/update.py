@@ -5,23 +5,15 @@ import pathlib
 
 def _run(base_directory: pathlib.Path, limit: int | None) -> None:
     # TODO: implement the update logic for this cache.
-    # Read the input data, compute the cache, and write the result into
+    # Read the inputs, compute the cache, and write the result into
     # `base_directory / "derivatives"` as JSON Lines (one JSON value per line).
-    #
-    # Inputs can come from one of three places, matching the input modes in
-    # update_pipeline.sh:
-    #   1. an input subdataset under `base_directory / "sourcedata"` (pinned in provenance),
-    #   2. a local `sourcedata` directory committed in the dataset, or
-    #   3. fetched directly over the network here (the first-in-chain / no-input-dataset
-    #      case). If you fetch inputs over the network, remember the processing container
-    #      must have outbound network access at run time. For inputs pulled from the
-    #      public DANDI S3 bucket, see .claude/skills/dandi-s3-network-inputs/SKILL.md
-    #      for lessons on access errors, connection pooling, and manifest formats.
-    #
     # `limit` is an optional batch size for incremental, resumable runs: process at most
     # `limit` new items per invocation and skip those already recorded in the derivatives.
-    # Remove it (and the `--limit` plumbing in update_pipeline.sh and update.yml) if this
-    # cache is recomputed in full on every run.
+    #
+    # The setup checklist — input modes, whether to keep `--limit`, and lessons for
+    # fetching inputs from the public DANDI S3 bucket — lives in the plain-Markdown
+    # skills .claude/skills/setup-cache/SKILL.md and
+    # .claude/skills/dandi-s3-network-inputs/SKILL.md.
 
     records: list = []
 
