@@ -80,31 +80,12 @@ The repository is described as a [BIDS study dataset](https://bids-specification
 
 
 
-### Input modes
-
-A cache's inputs can come from one of three first-class sources. Select the one that fits in [`code/update_pipeline.sh`](code/update_pipeline.sh) (the `INPUT_SUBDATASET_URL` TODO) and [`code/update.py`](code/update.py):
-
-1. **Upstream DataLad dataset.** Set `INPUT_SUBDATASET_URL` to register an upstream dataset as an input subdataset. It is cloned into the `derivatives` dataset and pinned via `--input` in the provenance of every run, so each result records the exact input commit it was computed from.
-2. **Local `sourcedata` directory.** Inputs live under the dataset's own `sourcedata/` (e.g. committed fixtures). Leave `INPUT_SUBDATASET_URL` empty.
-3. **First-in-chain / no input dataset.** The cache fetches its own inputs over the network at run time (e.g. it queries a remote API or archive). Leave `INPUT_SUBDATASET_URL` empty: there is no input dataset to pin, so no `--input` provenance is declared. Because the inputs are pulled at run time, **the processing container requires outbound network access** — the runtime environment must allow the container to reach the upstream source.
-
-
-
 ## Repository setup
 
-After generating a repository from this template:
+After generating a repository from this template, the full setup checklist lives in [`.claude/skills/setup-cache/SKILL.md`](.claude/skills/setup-cache/SKILL.md): replacing the placeholders, choosing an input mode, implementing the cache logic, and removing the template scaffolding (this section and the **How it works** section above included).
 
-1. Replace every `<cache-name>` / `<cache_name>` placeholder and resolve the `TODO` markers (the update schedule, the cache logic, the input dataset, the notification recipients). Fill in the placeholder fields in [`dataset_description.json`](dataset_description.json) (`Name`, `Authors`; `License` defaults to `CC-BY-4.0` — change it if this cache uses a different license).
-2. Add this cache's processing dependencies to [`envs/pyproject.toml`](envs/pyproject.toml).
-3. Specify the [`code/update.py`](code/update.py) protocol.
-4. Remove the template scaffolding from the local README — these sections document the template itself, not the generated cache. Delete the **How it works** section (including its **Input modes** subsection, once you have chosen and wired up an input mode) and this **Repository setup** section (including the **Local development** subsection below).
+### With Claude Code
 
+Open a [Claude Code](https://claude.com/claude-code) session in the freshly generated repository and start from a prompt like:
 
-
-### Local development
-
-The container image is the authoritative runtime, but you can recreate the environment locally with [uv](https://docs.astral.sh/uv/) for debugging:
-
-```bash
-uv run --project envs python code/update.py
-```
+> Set up this new DANDI cache using the setup-cache skill. The cache should `<describe what this cache computes, where its inputs come from, and how often it should update>`. Open the result as a single setup PR.

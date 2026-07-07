@@ -38,28 +38,11 @@ GITHUB_SHA="${GITHUB_SHA:-unknown}"
 BOT_NAME="github-actions[bot]"
 BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 
-# TODO: pick this cache's input mode. There are three first-class cases:
-#
-#   1. Upstream DataLad dataset (input subdataset): set INPUT_SUBDATASET_URL to register an
-#      upstream dataset as an input subdataset. It is cloned into the derivatives dataset and
-#      pinned in the provenance of every run via `--input`, so each result records the exact
-#      input commit it was computed from. INPUT_SUBDATASET_BRANCH selects which branch of the
-#      input dataset to track: dandi-cache datasets publish their data on a dedicated branch
-#      (their default branch holds only code), so this defaults to `derivatives`; set it to
-#      whatever branch the upstream cache publishes to (e.g. `min`). It is recorded in
-#      `.gitmodules` so `submodule update --remote` follows that branch on every run.
-#   2. Local `sourcedata` directory: inputs live under the dataset's own `sourcedata/` (e.g.
-#      committed fixtures). Leave INPUT_SUBDATASET_URL empty; declare the relevant paths as
-#      `--input` below if you want them pinned in provenance.
-#   3. First-in-chain / no input dataset: this cache fetches its own inputs over the network
-#      at run time (e.g. queries a remote API or archive). Leave INPUT_SUBDATASET_URL empty.
-#      There is no input dataset to pin, so no `--input` provenance is declared. NOTE: the
-#      processing container therefore REQUIRES outbound network access at run time; the
-#      `--call-fmt` below must not isolate the network, and the runtime environment must
-#      allow the container to reach the upstream source.
-#
-# Leave INPUT_SUBDATASET_URL empty for cases 2 and 3; the subdataset handling below is then
-# skipped.
+# TODO: pick this cache's input mode — upstream DataLad dataset, local `sourcedata`
+# directory, or first-in-chain network fetch. The three modes, and how these variables
+# drive them, are documented in .claude/skills/setup-cache/SKILL.md (step 2). Leave
+# INPUT_SUBDATASET_URL empty for the two non-subdataset modes; the subdataset handling
+# below is then skipped.
 INPUT_SUBDATASET_URL=""  # e.g. https://github.com/dandi-cache/<input-dataset-name>.git
 INPUT_SUBDATASET_PATH="sourcedata/<input-dataset-name>"
 INPUT_SUBDATASET_BRANCH="derivatives"
