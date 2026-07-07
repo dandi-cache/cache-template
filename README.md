@@ -80,41 +80,16 @@ The repository is described as a [BIDS study dataset](https://bids-specification
 
 
 
-### Input modes
-
-A cache's inputs can come from one of three first-class sources. Select the one that fits in [`code/update_pipeline.sh`](code/update_pipeline.sh) (the `INPUT_SUBDATASET_URL` TODO) and [`code/update.py`](code/update.py):
-
-1. **Upstream DataLad dataset.** Set `INPUT_SUBDATASET_URL` to register an upstream dataset as an input subdataset. It is cloned into the `derivatives` dataset and pinned via `--input` in the provenance of every run, so each result records the exact input commit it was computed from.
-2. **Local `sourcedata` directory.** Inputs live under the dataset's own `sourcedata/` (e.g. committed fixtures). Leave `INPUT_SUBDATASET_URL` empty.
-3. **First-in-chain / no input dataset.** The cache fetches its own inputs over the network at run time (e.g. it queries a remote API or archive). Leave `INPUT_SUBDATASET_URL` empty: there is no input dataset to pin, so no `--input` provenance is declared. Because the inputs are pulled at run time, **the processing container requires outbound network access** — the runtime environment must allow the container to reach the upstream source.
-
-
-
 ## Repository setup
 
-After generating a repository from this template:
+After generating a repository from this template, the full setup checklist lives in [`.claude/skills/setup-cache/SKILL.md`](.claude/skills/setup-cache/SKILL.md): replacing the placeholders, choosing an input mode, implementing the cache logic, and removing the template scaffolding (this section and the **How it works** section above included).
 
-1. Replace every `<cache-name>` / `<cache_name>` placeholder and resolve the `TODO` markers (the update schedule, the cache logic, the input dataset, the notification recipients). Fill in the placeholder fields in [`dataset_description.json`](dataset_description.json) (`Name`, `Authors`; `License` defaults to `CC-BY-4.0` — change it if this cache uses a different license).
-2. Add this cache's processing dependencies to [`envs/pyproject.toml`](envs/pyproject.toml).
-3. Specify the [`code/update.py`](code/update.py) protocol.
-4. Remove the template scaffolding — these pieces document the template itself, not the generated cache. Delete the **How it works** section (including its **Input modes** subsection, once you have chosen and wired up an input mode), this **Repository setup** section (including the **Set up with Claude Code** and **Local development** subsections below), and the `.claude/skills/setup-cache` skill (plus `.claude/skills/dandi-s3-network-inputs` if this cache does not fetch inputs from the DANDI S3 bucket).
+### With Claude Code
 
-
-
-### Set up with Claude Code
-
-This template ships [Claude Code](https://claude.com/claude-code) skills under [`.claude/skills/`](.claude/skills) that encode the steps above (`setup-cache`) and hard-won guidance for caches that fetch inputs from the public DANDI S3 bucket (`dandi-s3-network-inputs`). To use them, open a Claude Code session in the freshly generated repository and start from a prompt like:
+Open a [Claude Code](https://claude.com/claude-code) session in the freshly generated repository and start from a prompt like:
 
 > Set up this new DANDI cache using the setup-cache skill. The cache should `<describe what this cache computes, where its inputs come from, and how often it should update>`. Open the result as a single setup PR.
 
-The skill removes this section, along with the rest of the template scaffolding, as part of that first setup PR.
+### Manually
 
-
-
-### Local development
-
-The container image is the authoritative runtime, but you can recreate the environment locally with [uv](https://docs.astral.sh/uv/) for debugging:
-
-```bash
-uv run --project envs python code/update.py
-```
+The skill files are plain Markdown — follow the checklist directly. A companion skill, [`dandi-s3-network-inputs`](.claude/skills/dandi-s3-network-inputs/SKILL.md), collects lessons for caches that fetch their inputs from the public DANDI S3 bucket.

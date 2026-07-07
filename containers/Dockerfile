@@ -3,7 +3,7 @@
 # The container is the project's pinned, reproducible runtime environment and the official way to run the pipeline.
 # The loose dependencies declared in envs/pyproject.toml are resolved fresh at build time, and the resulting image (by digest) is the lock.
 # As such, there is no lockfile in the repository to hold in sync.
-# uv is intentionally not used inside the image; it stays an outside-the-container convenience for running locally while debugging (see the README).
+# uv is intentionally not used inside the image; it stays an outside-the-container convenience for running locally while debugging (`uv run --project envs python code/update.py`).
 #
 # The image holds only the environment, not the code.
 # The code is supplied at run time (checked out or mounted), so a single image serves any revision of the code.

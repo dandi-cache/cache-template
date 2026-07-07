@@ -9,6 +9,11 @@ Work through all of these steps in a single setup PR. `<cache-name>` is the hyph
 repository name (e.g., `my-cache`); `<cache_name>` is the underscored form used for file
 and variable names (e.g., `my_cache`).
 
+Before starting, read the README's **How it works** section — it explains the
+`main` / `derivatives` / `dist` branch layout and the container-based provenance that
+the pipeline relies on. (It is part of the scaffolding removed in step 4, so it only
+exists before setup.)
+
 ## 1. Replace placeholders and resolve TODO markers
 
 - Replace every `<cache-name>` / `<cache_name>` occurrence across the repository
@@ -25,13 +30,18 @@ and variable names (e.g., `my_cache`).
 Select one of the three input modes in `code/update_pipeline.sh` (the
 `INPUT_SUBDATASET_URL` TODO) and `code/update.py`:
 
-1. **Upstream DataLad dataset** — set `INPUT_SUBDATASET_URL`; the dataset is pinned in
-   the provenance of every run.
-2. **Local `sourcedata` directory** — committed fixtures; leave `INPUT_SUBDATASET_URL`
-   empty.
-3. **First-in-chain / no input dataset** — `update.py` fetches its own inputs over the
-   network at run time; leave `INPUT_SUBDATASET_URL` empty and remember the processing
-   container needs outbound network access. If the inputs come from the public DANDI S3
+1. **Upstream DataLad dataset.** Set `INPUT_SUBDATASET_URL` to register an upstream
+   dataset as an input subdataset. It is cloned into the `derivatives` dataset and
+   pinned via `--input` in the provenance of every run, so each result records the
+   exact input commit it was computed from.
+2. **Local `sourcedata` directory.** Inputs live under the dataset's own `sourcedata/`
+   (e.g. committed fixtures). Leave `INPUT_SUBDATASET_URL` empty.
+3. **First-in-chain / no input dataset.** The cache fetches its own inputs over the
+   network at run time (e.g. it queries a remote API or archive). Leave
+   `INPUT_SUBDATASET_URL` empty: there is no input dataset to pin, so no `--input`
+   provenance is declared. Because the inputs are pulled at run time, the processing
+   container requires outbound network access — the runtime environment must allow the
+   container to reach the upstream source. If the inputs come from the public DANDI S3
    bucket, read the `dandi-s3-network-inputs` skill before writing that code.
 
 ## 3. Implement the cache logic
@@ -42,16 +52,20 @@ Select one of the three input modes in `code/update_pipeline.sh` (the
   (and its plumbing in `update_pipeline.sh` and `update.yml`) if the cache is recomputed
   in full on every run.
 - Add the processing dependencies to `envs/pyproject.toml`.
+- The container image is the authoritative runtime, but recreate the environment
+  locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
+  `uv run --project envs python code/update.py`.
 
 ## 4. Remove the template scaffolding
 
 These pieces document the template itself, not the generated cache — delete them in this
 same setup PR:
 
-- The README **How it works** section (including its **Input modes** subsection, once the
-  chosen input mode is wired up).
-- The README **Repository setup** section (including the **Set up with Claude Code** and
-  **Local development** subsections).
+- The README **How it works** section — the generated cache's README should describe
+  only the cache itself and how to consume it.
+- The README **Repository setup** section (including its **With Claude Code** and
+  **Manually** subsections).
 - `.claude/skills/setup-cache/` — this skill has no purpose once setup is done.
 - `.claude/skills/dandi-s3-network-inputs/` — only if this cache does **not** fetch
-  inputs from the DANDI S3 bucket; keep it when input mode 3 uses that bucket.
+  inputs from the DANDI S3 bucket; keep it when input mode 3 uses that bucket. If
+  nothing remains under `.claude/`, remove the directory entirely.
