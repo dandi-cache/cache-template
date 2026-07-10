@@ -38,10 +38,10 @@ curl https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/
 
 ## Repeated use
 
-If you plan on using this cache regularly, clone the `dist` branch of this repository:
+If you plan on using this cache regularly, clone the `derivatives` branch of this repository:
 
 ```bash
-git clone --branch dist https://github.com/dandi-cache/<cache-name>.git
+git clone --branch derivatives https://github.com/dandi-cache/<cache-name>.git
 ```
 
 Or, if you prefer [DataLad](https://www.datalad.org/):
