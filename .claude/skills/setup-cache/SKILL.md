@@ -56,14 +56,34 @@ drive the choice, and `code/update.py` reads accordingly:
 
 - Implement `_run` in `code/update.py`: read the inputs, compute the cache, and write the
   result into `derivatives/<cache_name>.jsonl` as JSON Lines.
-- Decide whether to keep `--limit`. It is a batch size for incremental, resumable runs:
-  process at most `limit` new items per invocation and skip those already recorded in
-  the derivatives. Remove it (and its plumbing in `update_pipeline.sh` and `update.yml`)
-  if the cache is recomputed in full on every run.
+- Give `_run` a `--testing` flag: when set, process only a handful of items
+  (`_TESTING_LIMIT`, e.g. 10) and write to `derivatives/testing.jsonl` instead of
+  `derivatives/<cache_name>.jsonl`, so a manual dispatch can exercise the real processing
+  logic end to end — including the container build, `datalad containers-run` provenance,
+  and the S3/API calls if this cache fetches network inputs — without ever overwriting the
+  real cache. Thread it through `update_pipeline.sh` (a `TESTING` env var, `"true"` →
+  `--testing`) and `update.yml` (a `workflow_dispatch.inputs.testing` checkbox). Slice
+  however fits how this cache's items are structured (e.g. slice each category separately
+  if entries fall into distinct cases, as in
+  [content-id-to-usage-dandiset-path](https://github.com/dandi-cache/content-id-to-usage-dandiset-path/blob/main/code/update.py)).
+- Decide whether to also add a `--limit` flag, separate from `--testing`: a batch size that
+  caps a real (non-testing) run to processing at most N new items, skipping those already
+  recorded in the derivatives. This is only needed when the update is so heavy per item that
+  a single invocation cannot complete the full backlog in one run — e.g.
+  [qualifying-aind-content-ids](https://github.com/dandi-cache/qualifying-aind-content-ids),
+  where each run intentionally advances only a small number of items. Most caches don't need
+  it: design `_run` to be idempotent and incremental on its own — skip items already
+  recorded in the derivatives and compute only what's new or changed since the last run —
+  rather than reprocessing the full backlog from scratch every time.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
-  `uv run --project envs python code/update.py`.
+  `uv run --project envs python code/update.py --testing`. Run with `--testing` first — it
+  is fast and never touches the real cache — before a full local run without the flag.
+- Before merging, do a smoke run through the real pipeline: manually dispatch the `Update`
+  workflow with `testing: true` (or run `code/update_pipeline.sh` locally with
+  `TESTING=true`) and confirm it completes, writes `derivatives/testing.jsonl`, and leaves
+  `derivatives/<cache_name>.jsonl` untouched.
 
 ## 4. Remove the template scaffolding
 
