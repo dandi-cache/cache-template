@@ -60,10 +60,28 @@ drive the choice, and `code/update.py` reads accordingly:
   process at most `limit` new items per invocation and skip those already recorded in
   the derivatives. Remove it (and its plumbing in `update_pipeline.sh` and `update.yml`)
   if the cache is recomputed in full on every run.
+- Decide whether to keep `--testing`. It is a smoke-run flag, independent of `--limit`:
+  when set, `_run` processes only a handful of items (`_TESTING_LIMIT`, already scaffolded
+  at 10) and writes to `derivatives/testing.jsonl` instead of `derivatives/<cache_name>.jsonl`,
+  so a manual dispatch can exercise the real processing logic end to end — including the
+  container build, `datalad containers-run` provenance, and the S3/API calls if this cache
+  fetches network inputs — without ever overwriting the real cache. It is threaded through
+  already: `update_pipeline.sh`'s `TESTING` env var (`"true"` → `--testing`) and
+  `update.yml`'s `workflow_dispatch.inputs.testing` checkbox. Adjust `_TESTING_LIMIT` and the
+  slicing logic in `_run` to fit how this cache's items are structured (e.g. slice each
+  category separately if entries fall into distinct cases, as in
+  [content-id-to-usage-dandiset-path](https://github.com/dandi-cache/content-id-to-usage-dandiset-path/blob/main/code/update.py)).
+  Keep it unless the cache is so cheap to run in full that a separate smoke mode adds no
+  value.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
-  `uv run --project envs python code/update.py`.
+  `uv run --project envs python code/update.py --testing`. Run with `--testing` first — it
+  is fast and never touches the real cache — before a full local run without the flag.
+- Before merging, do a smoke run through the real pipeline: manually dispatch the `Update`
+  workflow with `testing: true` (or run `code/update_pipeline.sh` locally with
+  `TESTING=true`) and confirm it completes, writes `derivatives/testing.jsonl`, and leaves
+  `derivatives/<cache_name>.jsonl` untouched.
 
 ## 4. Remove the template scaffolding
 
