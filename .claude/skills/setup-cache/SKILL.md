@@ -72,7 +72,9 @@ drive the choice, and `code/update.py` reads accordingly:
   a single invocation cannot complete the full backlog in one run — e.g.
   [qualifying-aind-content-ids](https://github.com/dandi-cache/qualifying-aind-content-ids),
   where each run intentionally advances only a small number of items. Most caches don't need
-  it; default to a complete recompute every run.
+  it: design `_run` to be idempotent and incremental on its own — skip items already
+  recorded in the derivatives and compute only what's new or changed since the last run —
+  rather than reprocessing the full backlog from scratch every time.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
