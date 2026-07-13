@@ -24,7 +24,6 @@
 #   WORKSPACE   Path to the `main` checkout that holds the code (this repository).
 #   IMAGE       Container image reference to run the processing in.
 # Optional:
-#   LIMIT        Batch size passed to update.py for incremental runs (default: 2000).
 #   TESTING      Set to "true" to run update.py in testing mode: it processes only a few
 #                items and reads/writes derivatives/testing.jsonl, leaving the real cache
 #                untouched. Empty/unset means a complete run.
@@ -35,7 +34,6 @@ set -euo pipefail
 : "${REPO_URL:?REPO_URL must be set}"
 : "${WORKSPACE:?WORKSPACE must be set}"
 : "${IMAGE:?IMAGE must be set}"
-LIMIT="${LIMIT:-2000}"
 TESTING="${TESTING:-}"
 GITHUB_SHA="${GITHUB_SHA:-unknown}"
 
@@ -158,7 +156,7 @@ datalad containers-run -n pipeline --explicit \
   "${RUN_INPUT_ARGS[@]}" \
   --output derivatives \
   -m "Update <cache-name> (code @ ${GITHUB_SHA}; image ${DIGEST})" \
-  "python /code/update.py --base-directory /tmp --limit ${LIMIT} ${TESTING_ARG}"
+  "python /code/update.py --base-directory /tmp ${TESTING_ARG}"
 
 # Publish the full results to the `derivatives` branch.
 git -C "${DS}" push "${REPO_URL}" HEAD:derivatives

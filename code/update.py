@@ -10,16 +10,14 @@ _CACHE_FILE_NAME = "<cache_name>.jsonl"
 _TESTING_FILE_NAME = "testing.jsonl"
 
 
-def _run(base_directory: pathlib.Path, limit: int | None, testing: bool) -> None:
+def _run(base_directory: pathlib.Path, testing: bool) -> None:
     # TODO: implement the update logic for this cache.
     # Read the inputs, compute the cache, and write the result into
     # `base_directory / "derivatives"` as JSON Lines (one JSON value per line).
-    # `limit` is an optional batch size for incremental, resumable runs: process at most
-    # `limit` new items per invocation and skip those already recorded in the derivatives.
     #
-    # The setup checklist — input modes, whether to keep `--limit`, whether to keep
-    # `--testing`, and lessons for fetching inputs from the public DANDI S3 bucket — lives
-    # in the plain-Markdown skills .claude/skills/setup-cache/SKILL.md and
+    # The setup checklist — input modes, whether to keep `--testing`, and lessons for
+    # fetching inputs from the public DANDI S3 bucket — lives in the plain-Markdown
+    # skills .claude/skills/setup-cache/SKILL.md and
     # .claude/skills/dandi-s3-network-inputs/SKILL.md.
 
     records: list = []
@@ -53,12 +51,6 @@ if __name__ == "__main__":
         ),
     )
     parser.add_argument(
-        "--limit",
-        type=int,
-        default=None,
-        help="Optional cap on the number of new items to process in this run.",
-    )
-    parser.add_argument(
         "--testing",
         action="store_true",
         help=(
@@ -69,4 +61,4 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    _run(base_directory=args.base_directory, limit=args.limit, testing=args.testing)
+    _run(base_directory=args.base_directory, testing=args.testing)

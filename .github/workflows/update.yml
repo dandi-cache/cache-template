@@ -9,11 +9,6 @@ on:
     - cron: "0 0 * * *"  # TODO: set the desired schedule
   workflow_dispatch:
     inputs:
-      limit:
-        description: "Optional cap on the number of new items to process in this run."
-        required: false
-        type: number
-        default: 2000
       testing:
         # A testing run processes only a few items and reads/writes
         # derivatives/testing.jsonl, so the real cache is never touched.
@@ -88,7 +83,6 @@ jobs:
         env:
           REPO_URL: https://x-access-token:${{ secrets._GITHUB_API_KEY }}@github.com/${{ github.repository }}.git
           WORKSPACE: ${{ github.workspace }}
-          LIMIT: ${{ github.event.inputs.limit || '2000' }}
           # Empty for scheduled runs and "false" for plain manual runs (complete update);
           # only "true" when testing mode is explicitly selected on workflow_dispatch.
           TESTING: ${{ github.event.inputs.testing }}

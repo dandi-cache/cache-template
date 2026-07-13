@@ -56,23 +56,27 @@ drive the choice, and `code/update.py` reads accordingly:
 
 - Implement `_run` in `code/update.py`: read the inputs, compute the cache, and write the
   result into `derivatives/<cache_name>.jsonl` as JSON Lines.
-- Decide whether to keep `--limit`. It is a batch size for incremental, resumable runs:
-  process at most `limit` new items per invocation and skip those already recorded in
-  the derivatives. Remove it (and its plumbing in `update_pipeline.sh` and `update.yml`)
-  if the cache is recomputed in full on every run.
-- Decide whether to keep `--testing`. It is a smoke-run flag, independent of `--limit`:
-  when set, `_run` processes only a handful of items (`_TESTING_LIMIT`, already scaffolded
-  at 10) and writes to `derivatives/testing.jsonl` instead of `derivatives/<cache_name>.jsonl`,
-  so a manual dispatch can exercise the real processing logic end to end — including the
-  container build, `datalad containers-run` provenance, and the S3/API calls if this cache
-  fetches network inputs — without ever overwriting the real cache. It is threaded through
-  already: `update_pipeline.sh`'s `TESTING` env var (`"true"` → `--testing`) and
-  `update.yml`'s `workflow_dispatch.inputs.testing` checkbox. Adjust `_TESTING_LIMIT` and the
-  slicing logic in `_run` to fit how this cache's items are structured (e.g. slice each
-  category separately if entries fall into distinct cases, as in
+- Decide whether to keep `--testing`. It is a smoke-run flag: when set, `_run` processes
+  only a handful of items (`_TESTING_LIMIT`, already scaffolded at 10) and writes to
+  `derivatives/testing.jsonl` instead of `derivatives/<cache_name>.jsonl`, so a manual
+  dispatch can exercise the real processing logic end to end — including the container
+  build, `datalad containers-run` provenance, and the S3/API calls if this cache fetches
+  network inputs — without ever overwriting the real cache. It is threaded through already:
+  `update_pipeline.sh`'s `TESTING` env var (`"true"` → `--testing`) and `update.yml`'s
+  `workflow_dispatch.inputs.testing` checkbox. Adjust `_TESTING_LIMIT` and the slicing logic
+  in `_run` to fit how this cache's items are structured (e.g. slice each category
+  separately if entries fall into distinct cases, as in
   [content-id-to-usage-dandiset-path](https://github.com/dandi-cache/content-id-to-usage-dandiset-path/blob/main/code/update.py)).
   Keep it unless the cache is so cheap to run in full that a separate smoke mode adds no
   value.
+- `--testing` replaces the `--limit` cap this template previously scaffolded; it is not a
+  batch-size mechanism. Only add a `--limit`-style cap back in (a separate flag from
+  `--testing`, processing at most N new items per invocation and skipping those already
+  recorded in the derivatives) if the update itself is so heavy per item that a single
+  invocation cannot complete the full backlog in one run — e.g.
+  [qualifying-aind-content-ids](https://github.com/dandi-cache/qualifying-aind-content-ids),
+  where each run intentionally advances only a small number of items. Most caches don't need
+  this; default to a complete recompute every run.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
