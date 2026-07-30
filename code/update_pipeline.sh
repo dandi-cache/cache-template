@@ -46,6 +46,25 @@ fi
 BOT_NAME="github-actions[bot]"
 BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 
+# GitHub's git backend occasionally rejects a push with a transient server-side error (e.g.
+# "fatal error in commit_refs") that has nothing to do with the ref update itself. Retry a
+# handful of times with backoff before giving up, so a one-off hiccup doesn't fail the run.
+push_with_retry() {
+  local attempt=1
+  local max_attempts=5
+  local delay=5
+  while ! git "$@"; do
+    if [ "${attempt}" -ge "${max_attempts}" ]; then
+      echo "ERROR: 'git $*' failed after ${attempt} attempts." >&2
+      return 1
+    fi
+    echo "WARNING: 'git $*' failed (attempt ${attempt}/${max_attempts}); retrying in ${delay}s." >&2
+    sleep "${delay}"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
+}
+
 # TODO: pick this cache's input mode — upstream DataLad dataset, local `sourcedata`
 # directory, or first-in-chain network fetch. The three modes, and how these variables
 # drive them, are documented in .claude/skills/setup-cache/SKILL.md (step 2). Leave
@@ -166,7 +185,7 @@ datalad containers-run -n pipeline --explicit \
   "python /code/update.py --base-directory /tmp ${TESTING_ARG}"
 
 # Publish the full results to the `derivatives` branch.
-git -C "${DS}" push "${REPO_URL}" HEAD:derivatives
+push_with_retry -C "${DS}" push "${REPO_URL}" HEAD:derivatives
 
 # Build and force-publish the consumer-facing `dist` artifact from a fresh repo. Only the
 # real cache is published; a testing.jsonl(.gz) left by a testing run never reaches
@@ -183,4 +202,4 @@ git -C "${DISTDIR}" config user.name "${BOT_NAME}"
 git -C "${DISTDIR}" config user.email "${BOT_EMAIL}"
 git -C "${DISTDIR}" add dataset_description.json derivatives
 git -C "${DISTDIR}" commit -q -m "Publish <cache-name>"
-git -C "${DISTDIR}" push -f "${REPO_URL}" dist:dist
+push_with_retry -C "${DISTDIR}" push -f "${REPO_URL}" dist:dist
