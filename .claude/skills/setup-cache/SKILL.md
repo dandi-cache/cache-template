@@ -14,6 +14,11 @@ Before starting, read the README's **How it works** section — it explains the
 the pipeline relies on. (It is part of the scaffolding removed in step 4, so it only
 exists before setup.)
 
+`code/update_pipeline.sh` retries both publish pushes (`derivatives` and `dist`) on
+transient GitHub push errors (e.g. `fatal error in commit_refs`) via a `push_with_retry`
+helper. That's pipeline infrastructure, not per-cache configuration — leave it as-is
+unless you're deliberately changing the pipeline's push/retry behavior.
+
 ## 1. Replace placeholders and resolve TODO markers
 
 - Replace every `<cache-name>` / `<cache_name>` occurrence across the repository
