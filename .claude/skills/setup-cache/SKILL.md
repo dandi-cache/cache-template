@@ -15,9 +15,11 @@ the pipeline relies on. (It is part of the scaffolding removed in step 4, so it 
 exists before setup.)
 
 `code/update_pipeline.sh` retries both publish pushes (`derivatives` and `dist`) on
-transient GitHub push errors (e.g. `fatal error in commit_refs`) via a `push_with_retry`
-helper. That's pipeline infrastructure, not per-cache configuration — leave it as-is
-unless you're deliberately changing the pipeline's push/retry behavior.
+transient GitHub push errors (e.g. `fatal error in commit_refs`), and the runtime image
+`docker pull` on a transient ghcr.io `denied: denied` right after a successful login, via
+a shared `retry_with_backoff` helper (`push_with_retry` wraps it for git). That's pipeline
+infrastructure, not per-cache configuration — leave it as-is unless you're deliberately
+changing the pipeline's retry behavior.
 
 ## 1. Replace placeholders and resolve TODO markers
 
