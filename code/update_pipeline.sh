@@ -46,23 +46,31 @@ fi
 BOT_NAME="github-actions[bot]"
 BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 
-# GitHub's git backend occasionally rejects a push with a transient server-side error (e.g.
-# "fatal error in commit_refs") that has nothing to do with the ref update itself. Retry a
-# handful of times with backoff before giving up, so a one-off hiccup doesn't fail the run.
-push_with_retry() {
+# Some steps occasionally hit a transient, one-off failure that has nothing to do with the
+# operation itself -- e.g. GitHub's git backend rejecting a push with "fatal error in
+# commit_refs", or ghcr.io answering a manifest request with a transient "denied" right after
+# a successful login. Retry a handful of times with backoff before giving up, so a one-off
+# hiccup doesn't fail the whole run.
+retry_with_backoff() {
+  local label="$1"
+  shift
   local attempt=1
   local max_attempts=5
   local delay=5
-  while ! git "$@"; do
+  while ! "$@"; do
     if [ "${attempt}" -ge "${max_attempts}" ]; then
-      echo "ERROR: 'git $*' failed after ${attempt} attempts." >&2
+      echo "ERROR: '${label}' failed after ${attempt} attempts." >&2
       return 1
     fi
-    echo "WARNING: 'git $*' failed (attempt ${attempt}/${max_attempts}); retrying in ${delay}s." >&2
+    echo "WARNING: '${label}' failed (attempt ${attempt}/${max_attempts}); retrying in ${delay}s." >&2
     sleep "${delay}"
     attempt=$((attempt + 1))
     delay=$((delay * 2))
   done
+}
+
+push_with_retry() {
+  retry_with_backoff "git $*" git "$@"
 }
 
 # TODO: pick this cache's input mode — upstream DataLad dataset, local `sourcedata`
@@ -139,20 +147,7 @@ fi
 
 # Pin the published image digest and register it as a container. Only the digest is stored
 # (a small text file), so the dataset stays annex-free; ghcr holds the image bytes.
-#
-# Retry a few times: ghcr.io occasionally answers a manifest HEAD with a transient
-# "denied: denied" right after a successful login, unrelated to actual auth/permissions.
-for attempt in 1 2 3; do
-  if docker pull "${IMAGE}"; then
-    break
-  elif [ "${attempt}" = 3 ]; then
-    echo "ERROR: docker pull ${IMAGE} failed after ${attempt} attempts." >&2
-    exit 1
-  else
-    echo "docker pull ${IMAGE} failed (attempt ${attempt}/3); retrying in $((attempt * 5))s..." >&2
-    sleep "$((attempt * 5))"
-  fi
-done
+retry_with_backoff "docker pull ${IMAGE}" docker pull "${IMAGE}"
 DIGEST=$(docker inspect --format '{{index .RepoDigests 0}}' "${IMAGE}")
 mkdir -p .datalad/environments/pipeline
 printf '%s\n' "${DIGEST}" > .datalad/environments/pipeline/image
