@@ -15,11 +15,16 @@ the pipeline relies on. (It is part of the scaffolding removed in step 4, so it 
 exists before setup.)
 
 `code/update_pipeline.sh` retries both publish pushes (`derivatives` and `dist`) on
-transient GitHub push errors (e.g. `fatal error in commit_refs`), and the runtime image
+transient GitHub push errors (e.g. `fatal error in commit_refs`, or `cannot lock ref
+'refs/heads/derivatives': is at <X> but expected <Y>` where `<X>` is the commit the run
+itself just produced — the push was applied server-side despite the reported failure, so
+the retry is a no-op and the run goes on to publish `dist`), and the runtime image
 `docker pull` on a transient ghcr.io `denied: denied` right after a successful login, via
 a shared `retry_with_backoff` helper (`push_with_retry` wraps it for git). That's pipeline
 infrastructure, not per-cache configuration — leave it as-is unless you're deliberately
-changing the pipeline's retry behavior.
+changing the pipeline's retry behavior. When triaging a failed `Update` run that died at a
+push, check `git ls-remote origin derivatives dist` first: if `derivatives` already holds the
+run's commit, nothing was lost and the next scheduled run republishes `dist`.
 
 ## 1. Replace placeholders and resolve TODO markers
 

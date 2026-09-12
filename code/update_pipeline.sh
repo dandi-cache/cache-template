@@ -48,9 +48,16 @@ BOT_EMAIL="github-actions[bot]@users.noreply.github.com"
 
 # Some steps occasionally hit a transient, one-off failure that has nothing to do with the
 # operation itself -- e.g. GitHub's git backend rejecting a push with "fatal error in
-# commit_refs", or ghcr.io answering a manifest request with a transient "denied" right after
-# a successful login. Retry a handful of times with backoff before giving up, so a one-off
-# hiccup doesn't fail the whole run.
+# commit_refs" or with "cannot lock ref 'refs/heads/<branch>': is at <X> but expected <Y>",
+# or ghcr.io answering a manifest request with a transient "denied" right after a successful
+# login. Retry a handful of times with backoff before giving up, so a one-off hiccup doesn't
+# fail the whole run.
+#
+# The "cannot lock ref" rejection deserves a note: when <X> is the commit this very run just
+# created, the push was in fact applied server-side and GitHub reported a failure anyway (the
+# workflow's concurrency group rules out a competing run). The retry is then a no-op push
+# ("Everything up-to-date") and the run proceeds to publish `dist`, which would otherwise be
+# left stale. A genuine non-fast-forward still fails once the retries are exhausted.
 retry_with_backoff() {
   local label="$1"
   shift
