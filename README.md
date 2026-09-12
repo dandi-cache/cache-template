@@ -50,6 +50,8 @@ Or, if you prefer [DataLad](https://www.datalad.org/):
 datalad clone https://github.com/dandi-cache/<cache-name>.git --branch derivatives
 ```
 
+The `derivatives` branch also keeps the log of every update under `logs/`, next to the results it produced.
+
 Then set up a CRON on your system to pull the latest version of the cache at your desired frequency.
 
 For example, through `crontab -e`, add:
@@ -69,7 +71,7 @@ This cache template demonstrates how generated results of the code branch and re
 It uses three branches:
 
 - **`main`** holds only the code of the update logic, the runtime container definition, and the CI workflows (including building and distributing the container images).
-- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance of the exact command, the input subdataset commit, the output diff, and the runtime container image digest.
+- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded there with `datalad containers-run`, so every revision carries full provenance of the exact command, the input subdataset commit, the output diff, the runtime container image digest, and the run's own log under `logs/`.
 - **`dist`** is the lightweight publication artifact consumed by downstream users and preferred for one-time downloads.
 
 The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) that holds only the pinned runtime environment.
