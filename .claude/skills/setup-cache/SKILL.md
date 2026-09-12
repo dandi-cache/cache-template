@@ -87,6 +87,14 @@ drive the choice, and `code/update.py` reads accordingly:
   it: design `_run` to be idempotent and incremental on its own — skip items already
   recorded in the derivatives and compute only what's new or changed since the last run —
   rather than reprocessing the full backlog from scratch every time.
+- Log through the module-level `logger` in `code/update.py`, never `print`: it is already
+  configured to write to stdout (flushed per record, the live CI job log) and to a
+  timestamped file under `logs/`, which `update_pipeline.sh` declares as an output of the
+  recorded run so every completed update's log lands on the `derivatives` branch next to
+  its results. Emit one `logger.info` line per processed item (what it was, its size, how
+  long it took, `_peak_memory_mib()`), and `logger.warning` for skipped items, so a run
+  killed mid-batch shows which item it was on and how much memory it had reached. Keep
+  the header/footer lines that are already there.
 - Add the processing dependencies to `envs/pyproject.toml`.
 - The container image is the authoritative runtime, but recreate the environment
   locally with [uv](https://docs.astral.sh/uv/) to debug and verify:
