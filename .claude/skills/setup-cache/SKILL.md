@@ -29,9 +29,9 @@ So this repository holds **four things**, and nothing else:
 Do **not** write, copy in, or restore any of the following. They are the shared pipeline,
 and a copy here is a copy that drifts:
 
-- an orchestration script (`code/update_pipeline.sh`) — it is vendored in the image at
-  `/opt/dandi-cache-utils/bin/update_pipeline.sh`, and the shared workflow extracts and
-  runs it;
+- an orchestration script (`code/update_pipeline.sh`) — it ships inside the
+  `dandi_cache_utils` package, is vendored into the image with it, and the shared workflow
+  extracts and runs it (`dandi-cache pipeline --path` says where any installation keeps it);
 - a compression step (`code/compress.py`) — `dandi-cache compress` does it;
 - a `dataset_description.json` — it is rendered from `cache.toml`'s `[description]` onto
   the published branches;
