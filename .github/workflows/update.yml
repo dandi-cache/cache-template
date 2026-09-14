@@ -1,9 +1,8 @@
 name: Update
 
-# Everything this workflow used to spell out -- the gate against redundant queued runs, the
-# checkout, uv, git-annex, the registry login, the image reference, the pipeline invocation and the
-# failure notification -- lives in the shared workflow. What stays here is what is genuinely this
-# cache's own: when it runs, and what a manual dispatch can change.
+# What stays here is what is genuinely this cache's own: when it runs, and what a manual dispatch
+# can change. The gate against redundant queued runs, the runner's environment, the registry login,
+# the image, the pipeline and the failure notification are all in the shared action.
 
 permissions:
   contents: read
@@ -26,16 +25,25 @@ on:
         default: ""
 
 # Serialize all runs across every ref: an in-progress update is never cancelled, and a run
-# triggered while one is executing waits in the queue. The shared workflow's Gate job then skips
-# the queued run once it starts, because the update it would perform has just been done.
+# triggered while one is executing waits in the queue. The action then skips the queued run once it
+# starts, because the update it would perform has just been done.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:
   Update:
-    uses: dandi-cache/dandi-cache-utils/.github/workflows/cache-update.yml@main
-    with:
-      testing: ${{ inputs.testing || false }}
-      limit: ${{ inputs.limit || '' }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    # So a hung network read cannot burn a full six hours.
+    timeout-minutes: 330
+    steps:
+      - uses: dandi-cache/dandi-cache-actions@v0
+        with:
+          token: ${{ secrets._GITHUB_API_KEY }}
+          testing: ${{ inputs.testing || false }}
+          limit: ${{ inputs.limit || '' }}
+          mail-username: ${{ secrets.MAIL_USERNAME }}
+          mail-password: ${{ secrets.MAIL_PASSWORD }}

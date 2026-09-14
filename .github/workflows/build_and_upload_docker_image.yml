@@ -1,8 +1,8 @@
 name: Build and Upload Container
 
 # The build itself -- tagging per ref so a branch build no longer overwrites `:latest`, the
-# registry login, and the check that the image really did come from the shared base -- lives in the
-# shared workflow.
+# registry login, and the check that the image really did come from the shared base -- is in the
+# shared action.
 
 permissions:
   contents: read
@@ -28,5 +28,13 @@ concurrency:
 
 jobs:
   BuildAndPush:
-    uses: dandi-cache/dandi-cache-utils/.github/workflows/cache-image.yml@main
-    secrets: inherit
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: dandi-cache/dandi-cache-actions/image@v0
+        with:
+          token: ${{ secrets._GITHUB_API_KEY }}
+          mail-username: ${{ secrets.MAIL_USERNAME }}
+          mail-password: ${{ secrets.MAIL_PASSWORD }}

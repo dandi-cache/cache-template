@@ -66,9 +66,11 @@ This will minimize data overhead by only loading the most recent changes.
 
 ## How it works
 
-This cache is one operation; everything around it is shared. The pipeline, the library its
-update code is written against, the container base image and the CI workflows all come from
-[`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils), so this repository holds
+This cache is one operation; everything around it is shared. The pipeline, the library its update
+code is written against and the container base image come from
+[`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils); the CI that runs them
+comes from [`dandi-cache-actions`](https://github.com/dandi-cache/dandi-cache-actions). So this
+repository holds
 only what makes this cache different from its siblings: `cache.toml` (what it is),
 `code/update.py` (what it does, per item), `envs/pyproject.toml` (its own dependencies) and a
 schedule.
@@ -76,7 +78,7 @@ schedule.
 It uses three branches:
 
 - **`main`** holds only that: the declaration, the update logic, the runtime container definition,
-  and the two workflows that delegate to the shared ones.
+  and the two workflows that call the shared actions.
 - [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a
   persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded
   there with `datalad containers-run`, so every revision carries full provenance of the exact

@@ -14,8 +14,10 @@ and variable names (e.g., `my_cache`).
 Every cache in the organization is the same pipeline around a different operation: read
 one or more upstream caches, work out what is not yet recorded, do something per item, and
 publish JSON Lines with full provenance. All of that except the operation lives in
-[`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils) and reaches this
-repository through the base container image it is built `FROM`.
+[`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils), reaching this
+repository through the base container image it is built `FROM`, and in
+[`dandi-cache-actions`](https://github.com/dandi-cache/dandi-cache-actions), which is the CI
+that runs it.
 
 So this repository holds **four things**, and nothing else:
 
@@ -30,7 +32,7 @@ Do **not** write, copy in, or restore any of the following. They are the shared 
 and a copy here is a copy that drifts:
 
 - an orchestration script (`code/update_pipeline.sh`) — it ships inside the
-  `dandi_cache_utils` package, is vendored into the image with it, and the shared workflow
+  `dandi_cache_utils` package, is vendored into the image with it, and the shared action
   extracts and runs it (`dandi-cache pipeline --path` says where any installation keeps it);
 - a compression step (`code/compress.py`) — `dandi-cache compress` does it;
 - a `dataset_description.json` — it is rendered from `cache.toml`'s `[description]` onto
@@ -98,7 +100,7 @@ If something the pipeline does is wrong or missing for this cache, fix it in
   `run_incremental_update`. Do not reimplement incrementality it does not need.
 - **A second entry point** (e.g. a `refresh` that re-assesses what is already recorded)
   gets its own script and an `[operations.<name>]` entry in `cache.toml`, plus a job in
-  `update.yml` passing `operation: <name>`.
+  `update.yml` whose step passes `operation: <name>`.
 - Add this cache's processing dependencies to `envs/pyproject.toml`. Leave `datalad` and
   `datalad-container` out: they run on the runner, from the pipeline's own pinned
   requirements, never inside the image.
