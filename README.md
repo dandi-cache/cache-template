@@ -66,37 +66,23 @@ This will minimize data overhead by only loading the most recent changes.
 
 ## How it works
 
-This cache is one operation; everything around it is shared. The pipeline, the library its update
-code is written against and the container base image come from
-[`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils); the CI that runs them
-comes from [`dandi-cache-action`](https://github.com/dandi-cache/dandi-cache-action). So this
-repository holds
-only what makes this cache different from its siblings: `cache.toml` (what it is),
-`code/update.py` (what it does, per item), `envs/pyproject.toml` (its own dependencies) and a
-schedule.
+This cache is one operation; everything around it is shared.
+The pipeline, the library its update code is written against and the container base image come from [`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils); the CI that runs them comes from [`dandi-cache-action`](https://github.com/dandi-cache/dandi-cache-action).
+So this repository holds only what makes this cache different from its siblings: `cache.toml` (what it is), `code/update.py` (what it does, per item), `envs/pyproject.toml` (its own dependencies) and a schedule.
 
 It uses three branches:
 
-- **`main`** holds only that: the declaration, the update logic, the runtime container definition,
-  and the two workflows that call the shared actions.
-- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a
-  persistent [DataLad](https://www.datalad.org/) dataset on its own branch. Each update is recorded
-  there with `datalad containers-run`, so every revision carries full provenance of the exact
-  command, the input subdataset commit, the output diff, the runtime container image digest, and
-  the run's own log under `logs/`.
-- **`dist`** is the lightweight publication artifact consumed by downstream users and preferred for
-  one-time downloads. Only the outputs declared in `cache.toml` are published to it.
+- **`main`** holds only that: the declaration, the update logic, the runtime container definition, and the two workflows that call the shared actions.
+- [**`derivatives`**](https://github.com/dandi-cache/cache-template/tree/derivatives) is a persistent [DataLad](https://www.datalad.org/) dataset on its own branch.
+  Each update is recorded there with `datalad containers-run`, so every revision carries full provenance of the exact command, the input subdataset commit, the output diff, the runtime container image digest, and the run's own log under `logs/`.
+- **`dist`** is the lightweight publication artifact consumed by downstream users and preferred for one-time downloads.
+  Only the outputs declared in `cache.toml` are published to it.
 
-The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`)
-built `FROM` the shared base image. That base carries the `dandi_cache_utils` library *and* the
-orchestration script, which CI extracts from the image and runs on the runner — so the image digest
-recorded in each run's provenance pins the orchestration and the runtime together, and a recorded
-run can be reproduced from the digest alone.
+The processing runs inside a published container image (`ghcr.io/dandi-cache/<cache-name>:latest`) built `FROM` the shared base image.
+That base carries the `dandi_cache_utils` library *and* the orchestration script, which CI extracts from the image and runs on the runner — so the image digest recorded in each run's provenance pins the orchestration and the runtime together, and a recorded run can be reproduced from the digest alone.
 
-The repository is described as a [BIDS study dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset)
-via a `dataset_description.json` that the pipeline renders from `cache.toml` onto the published
-branches (`DatasetType: "study"`). Future enhancements may improve the provenance tracking through
-this mechanism in line with BEP028.
+The repository is described as a [BIDS study dataset](https://bids-specification.readthedocs.io/en/stable/common-principles.html#study-dataset) via a `dataset_description.json` that the pipeline renders from `cache.toml` onto the published branches (`DatasetType: "study"`).
+Future enhancements may improve the provenance tracking through this mechanism in line with BEP028.
 
 
 
@@ -104,7 +90,8 @@ this mechanism in line with BEP028.
 
 After generating a repository from this template, the full setup checklist lives in [`.claude/skills/setup-cache/SKILL.md`](.claude/skills/setup-cache/SKILL.md): filling in `cache.toml`, choosing an input mode, implementing the per-item operation against `dandi_cache_utils`, and removing the template scaffolding (this section and the **How it works** section above included).
 
-Setting up a cache is filling in a declaration and writing one function. If you find yourself writing a pipeline, a logging setup, an argument parser, or a compression step, stop: it already exists in the shared library, and the skill says where.
+Setting up a cache is filling in a declaration and writing one function.
+If you find yourself writing a pipeline, a logging setup, an argument parser, or a compression step, stop: it already exists in the shared library, and the skill says where.
 
 ### With Claude Code
 
