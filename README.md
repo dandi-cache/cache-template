@@ -69,7 +69,7 @@ This will minimize data overhead by only loading the most recent changes.
 This cache is one operation; everything around it is shared. The pipeline, the library its update
 code is written against and the container base image come from
 [`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils); the CI that runs them
-comes from [`dandi-cache-actions`](https://github.com/dandi-cache/dandi-cache-actions). So this
+comes from [`dandi-cache-action`](https://github.com/dandi-cache/dandi-cache-action). So this
 repository holds
 only what makes this cache different from its siblings: `cache.toml` (what it is),
 `code/update.py` (what it does, per item), `envs/pyproject.toml` (its own dependencies) and a

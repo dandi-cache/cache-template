@@ -16,7 +16,7 @@ one or more upstream caches, work out what is not yet recorded, do something per
 publish JSON Lines with full provenance. All of that except the operation lives in
 [`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils), reaching this
 repository through the base container image it is built `FROM`, and in
-[`dandi-cache-actions`](https://github.com/dandi-cache/dandi-cache-actions), which is the CI
+[`dandi-cache-action`](https://github.com/dandi-cache/dandi-cache-action), which is the CI
 that runs it.
 
 So this repository holds **four things**, and nothing else:

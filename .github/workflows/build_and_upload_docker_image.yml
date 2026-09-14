@@ -33,7 +33,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: dandi-cache/dandi-cache-actions/image@v0
+      - uses: dandi-cache/dandi-cache-action/image@v0
         with:
           token: ${{ secrets._GITHUB_API_KEY }}
           mail-username: ${{ secrets.MAIL_USERNAME }}
