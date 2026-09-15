@@ -1,7 +1,5 @@
 # Agent instructions
 
-The organization's conventions, as set out in [`CodyCBakerPhD/historia`](https://github.com/CodyCBakerPhD/historia/blob/main/AGENTS.md) and [`dandi-cache-utils`](https://github.com/dandi-cache/dandi-cache-utils/blob/main/AGENTS.md), for a cache generated from this template.
-
 Setting up a new cache is the `setup-cache` skill's job, and it is more specific than this file.
 Read it first.
 
