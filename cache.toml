@@ -45,8 +45,22 @@ name = "<input-cache-name>"
 # limit = 500
 
 
-# Rendered to `dataset_description.json` on the published branches, so this repository does not
-# carry that file. `title` defaults to the cache name and `license` to CC-BY-4.0.
+# The published branches describe this repository as a BIDS study dataset, through a
+# `dataset_description.json` with `DatasetType: "study"`. The pipeline renders that file from this
+# section at the start of every run and copies it to `dist`, so the repository does not carry it
+# and it cannot fall behind what is declared here.
+#
+# Only the metadata this cache knows belongs here. Everything else has a default, and deleting the
+# whole section still publishes a valid description:
+#
+#   title         -> Name                defaults to the cache name
+#   authors       -> Authors             defaults to empty
+#   license       -> License             defaults to CC-BY-4.0
+#   bids_version  -> BIDSVersion         defaults to 1.10.0
+#   keywords      -> Keywords            omitted unless set
+#   references    -> ReferencesAndLinks  defaults to this repository's URL
+#
+# `dandi-cache dataset-description cache.toml` prints what this cache will publish.
 [description]
 title = "<cache-name>"
 authors = ["<Author Name>"]

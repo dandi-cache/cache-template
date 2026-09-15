@@ -40,7 +40,9 @@ That is the whole point of it being there.
 - `[[inputs]]` — one entry per upstream cache this one reads (see step 2).
   Only `name` is required unless the upstream publishes on a branch other than `derivatives` or under a file name that is not the underscored form of its own name.
 - `format` on each input — `lookup` if the file is one single-key object per line to be merged into one mapping (the usual shape), `records` if each line is an independent JSON value, `ids` if the lines are bare scalars.
-- `[description]` — `title` and `authors`; `license` defaults to `CC-BY-4.0`.
+- `[description]` — `title` and `authors`.
+  This is what the published branches describe the repository with: the pipeline renders it to a BIDS study `dataset_description.json` (`DatasetType: "study"`) on every run.
+  Every key has a default, so filling in the authors is usually the whole job; `dandi-cache dataset-description cache.toml` prints the result.
 - Replace every remaining `<cache-name>` / `<cache_name>` occurrence (README, `code/`, `containers/`, `envs/`), and resolve every `TODO`: the schedule in `.github/workflows/update.yml`, and the notification recipients if they should differ from the default.
 - Write a short description of what the cache contains and how it is derived at the top of the README.
 
