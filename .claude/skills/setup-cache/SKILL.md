@@ -27,7 +27,7 @@ They are the shared pipeline, and a copy here is a copy that drifts:
 
 - an orchestration script (`code/update_pipeline.sh`) — it ships inside the `dandi_cache_utils` package, is vendored into the image with it, and the shared action extracts and runs it (`dandi-cache pipeline --path` says where any installation keeps it);
 - a compression step (`code/compress.py`) — `dandi-cache compress` does it;
-- a `dataset_description.json` — it is rendered from `cache.toml`'s `[description]` onto the published branches;
+- a hand-written `dataset_description.json` — the repository's copy is generated from `cache.toml`'s `[description]` (`dandi-cache dataset-description --declared --output dataset_description.json`) and the build workflow fails when the two disagree, so edit the declaration and regenerate, never the file;
 - argument parsing, logging setup, the incremental frontier, batch limits, testing mode, output paths, or error-log handling in `code/update.py` — all of it is in the library.
 
 If something the pipeline does is wrong or missing for this cache, fix it in `dandi-cache-utils` so every cache gets the fix.
@@ -43,6 +43,8 @@ That is the whole point of it being there.
 - `[description]` — `title` and `authors`.
   This is what the published branches describe the repository with: the pipeline renders it to a BIDS study `dataset_description.json` (`DatasetType: "study"`) on every run.
   Every key has a default, so filling in the authors is usually the whole job; `dandi-cache dataset-description cache.toml` prints the result.
+  Regenerate the repository's copy once this section is filled in, since the template's still names `<cache-name>`:
+  `dandi-cache dataset-description --declared --output dataset_description.json`.
 - Replace every remaining `<cache-name>` / `<cache_name>` occurrence (README, `code/`, `containers/`, `envs/`), and resolve every `TODO`: the schedule in `.github/workflows/update.yml`, and the notification recipients if they should differ from the default.
 - Write a short description of what the cache contains and how it is derived at the top of the README.
 

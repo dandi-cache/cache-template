@@ -1,0 +1,27 @@
+{
+    "Name": "<cache-name>",
+    "BIDSVersion": "1.11.1",
+    "DatasetType": "study",
+    "License": "CC-BY-4.0",
+    "Authors": [
+        "<Author Name>"
+    ],
+    "ReferencesAndLinks": [
+        "https://github.com/dandi-cache/<cache-name>"
+    ],
+    "SourceDatasets": [
+        {
+            "URL": "https://github.com/dandi-cache/<input-cache-name>.git"
+        }
+    ],
+    "GeneratedBy": [
+        {
+            "Name": "dandi-cache-utils",
+            "CodeURL": "https://github.com/dandi-cache/dandi-cache-utils",
+            "Container": {
+                "ContainerType": "docker",
+                "ContainerTag": "ghcr.io/dandi-cache/<cache-name>"
+            }
+        }
+    ]
+}
