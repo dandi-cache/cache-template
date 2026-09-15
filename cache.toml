@@ -47,16 +47,21 @@ name = "<input-cache-name>"
 
 # The published branches describe this repository as a BIDS study dataset, through a
 # `dataset_description.json` with `DatasetType: "study"`. The pipeline renders that file from this
-# section at the start of every run and copies it to `dist`, so the repository does not carry it
-# and it cannot fall behind what is declared here.
+# section at the start of every run and copies it to `dist`, so it cannot fall behind what is
+# declared here.
+#
+# The copy in this repository is generated from this section too -- never hand-edited -- and the
+# build workflow fails if the two stop agreeing. After changing anything below, run:
+#
+#   dandi-cache dataset-description --declared --output dataset_description.json
 #
 # Only the metadata this cache knows belongs here. Everything else has a default, and deleting the
 # whole section still publishes a valid description:
 #
 #   title         -> Name                defaults to the cache name
-#   authors       -> Authors             defaults to empty
+#   authors       -> Authors             omitted unless set
 #   license       -> License             defaults to CC-BY-4.0
-#   bids_version  -> BIDSVersion         defaults to 1.10.0
+#   bids_version  -> BIDSVersion         defaults to the shared current release
 #   keywords      -> Keywords            omitted unless set
 #   references    -> ReferencesAndLinks  defaults to this repository's URL
 #
