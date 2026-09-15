@@ -54,9 +54,9 @@ name = "<input-cache-name>"
 # whole section still publishes a valid description:
 #
 #   title         -> Name                defaults to the cache name
-#   authors       -> Authors             defaults to empty
+#   authors       -> Authors             omitted unless set
 #   license       -> License             defaults to CC-BY-4.0
-#   bids_version  -> BIDSVersion         defaults to 1.10.0
+#   bids_version  -> BIDSVersion         defaults to the shared current release
 #   keywords      -> Keywords            omitted unless set
 #   references    -> ReferencesAndLinks  defaults to this repository's URL
 #
