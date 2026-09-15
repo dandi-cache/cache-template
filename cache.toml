@@ -1,0 +1,66 @@
+# The complete declarative description of this cache.
+#
+# One file, read by both the shared orchestration and this cache's own update code, so the two
+# cannot disagree. It replaces what used to be spread across `code/update_pipeline.sh` (the input
+# subdataset URLs, paths and branches, the output file names, the entry point, the batch size), the
+# update workflow (the image reference), `dataset_description.json`, and the constants at the top of
+# `code/update.py`.
+
+[cache]
+# The hyphenated repository name. Everything else is derived from it unless overridden:
+#   file_stem  -> the underscored form, so `derivatives/<file_stem>.jsonl`
+#   image      -> ghcr.io/dandi-cache/<name>
+#   outputs    -> ["<file_stem>.jsonl"]
+name = "<cache-name>"
+
+# Declare every derivatives file this cache publishes. Only these reach the `dist` branch, which is
+# what keeps a `testing_`-prefixed smoke-run artifact from ever reaching consumers.
+# outputs = ["<cache_name>.jsonl"]
+
+
+# Upstream caches, registered as DataLad input subdatasets and pinned in every run's provenance, so
+# each result records the exact input commits it was computed from.
+#
+# Delete the whole section for a first-in-chain cache that fetches its own inputs over the network;
+# nothing is then pinned, and the container must be able to reach the upstream source at run time.
+# Repeat the section for a cache with more than one input.
+#
+# Only `name` is required. `url`, `path`, `branch` and `file` default to the organization's
+# conventions, and `format` says how `dataset.read_input()` parses the file:
+#   lookup   one single-key object per line, merged into one mapping   (the usual shape)
+#   records  one independent JSON value per line, kept as a list
+#   ids      one bare scalar per line, collected into a set
+[[inputs]]
+name = "<input-cache-name>"
+# branch = "derivatives"
+# format = "lookup"
+
+
+# Entry points. `update` always exists and defaults to `code/update.py`; declare extras only when
+# this cache genuinely has one, such as a `refresh` that re-assesses what it already recorded.
+#
+# `limit` is the default batch size for a complete run. Set it only for a cache too heavy to clear
+# its backlog in one run; most caches should be incremental and leave it unset.
+# [operations.update]
+# limit = 500
+
+
+# The published branches describe this repository as a BIDS study dataset, through a
+# `dataset_description.json` with `DatasetType: "study"`. The pipeline renders that file from this
+# section at the start of every run and copies it to `dist`, so the repository does not carry it
+# and it cannot fall behind what is declared here.
+#
+# Only the metadata this cache knows belongs here. Everything else has a default, and deleting the
+# whole section still publishes a valid description:
+#
+#   title         -> Name                defaults to the cache name
+#   authors       -> Authors             defaults to empty
+#   license       -> License             defaults to CC-BY-4.0
+#   bids_version  -> BIDSVersion         defaults to 1.10.0
+#   keywords      -> Keywords            omitted unless set
+#   references    -> ReferencesAndLinks  defaults to this repository's URL
+#
+# `dandi-cache dataset-description cache.toml` prints what this cache will publish.
+[description]
+title = "<cache-name>"
+authors = ["<Author Name>"]
