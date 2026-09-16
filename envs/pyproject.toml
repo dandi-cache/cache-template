@@ -5,7 +5,10 @@
 # shared pipeline installs them on the runner from its own pinned requirements.
 
 [project]
-name = "<cache-name>"
+# Not this cache's name, and not a placeholder to substitute. The name is cosmetic: this project
+# exists so that pip has something to install the dependencies below from, and `<cache-name>` is
+# not a name pip accepts, so the image could never be built while it stood here.
+name = "cache-environment"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
