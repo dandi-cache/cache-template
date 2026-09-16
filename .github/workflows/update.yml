@@ -33,6 +33,10 @@ concurrency:
 
 jobs:
   Update:
+    # Never in the template itself, where the schedule above would run a real update every night
+    # against `<cache-name>` and mail the failure. A generated cache is not this repository, so the
+    # condition is true there and the job runs; leaving the line in costs that cache nothing.
+    if: github.repository != 'dandi-cache/cache-template'
     runs-on: ubuntu-latest
     permissions:
       contents: read

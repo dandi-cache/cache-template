@@ -45,7 +45,8 @@ That is the whole point of it being there.
   Every key has a default, so filling in the authors is usually the whole job; `dandi-cache dataset-description cache.toml` prints the result.
   Regenerate the repository's copy once this section is filled in, since the template's still names `<cache-name>`:
   `dandi-cache dataset-description --declared --output dataset_description.json`.
-- Replace every remaining `<cache-name>` / `<cache_name>` occurrence (README, `code/`, `containers/`, `envs/`), and resolve every `TODO`: the schedule in `.github/workflows/update.yml`, and the notification recipients if they should differ from the default.
+- Replace every remaining `<cache-name>` / `<cache_name>` occurrence (README, `code/`, `containers/`), and resolve every `TODO`: the schedule in `.github/workflows/update.yml`, and the notification recipients if they should differ from the default.
+  Not `envs/pyproject.toml`: the project name there is cosmetic, exists only so pip has something to install, and is deliberately not a placeholder.
 - Write a short description of what the cache contains and how it is derived at the top of the README.
 
 ## 2. Choose the input mode
@@ -96,3 +97,6 @@ These pieces document the template itself, not the generated cache — delete th
 - `.claude/skills/setup-cache/` — this skill has no purpose once setup is done.
 - `.claude/skills/dandi-s3-network-inputs/` — only if this cache does **not** fetch inputs from the DANDI S3 bucket; keep it when input mode 3 uses that bucket.
   If nothing remains under `.claude/`, remove the directory entirely.
+- The `if:` line on the `Update` and `BuildAndPush` jobs, which reads `github.repository != 'dandi-cache/cache-template'`.
+  It exists so the template does not run a cache's schedule or publish a cache's image, and this repository is not the template, so the condition is already true and every trigger runs.
+  Deleting it is tidiness rather than a fix, and leaving it costs this cache nothing.
