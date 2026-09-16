@@ -96,3 +96,6 @@ These pieces document the template itself, not the generated cache — delete th
 - `.claude/skills/setup-cache/` — this skill has no purpose once setup is done.
 - `.claude/skills/dandi-s3-network-inputs/` — only if this cache does **not** fetch inputs from the DANDI S3 bucket; keep it when input mode 3 uses that bucket.
   If nothing remains under `.claude/`, remove the directory entirely.
+- The `if:` line on the `Update` and `BuildAndPush` jobs, which reads `github.repository != 'dandi-cache/cache-template'`.
+  It exists so the template does not run a cache's schedule or publish a cache's image, and this repository is not the template, so the condition is already true and every trigger runs.
+  Deleting it is tidiness rather than a fix, and leaving it costs this cache nothing.

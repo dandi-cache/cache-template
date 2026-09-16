@@ -33,6 +33,11 @@ concurrency:
 
 jobs:
   BuildAndPush:
+    # A pull request builds anywhere, including in the template, which is what exercises this
+    # cache's Dockerfile and `cache.toml` before they are inherited. Everything else is skipped in
+    # the template, so it never publishes an image for a cache that does not exist. A generated
+    # cache is not this repository, so the second clause is true there and every trigger runs.
+    if: github.event_name == 'pull_request' || github.repository != 'dandi-cache/cache-template'
     runs-on: ubuntu-latest
     permissions:
       contents: read
