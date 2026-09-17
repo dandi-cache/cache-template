@@ -24,9 +24,20 @@ FROM ghcr.io/dandi-cache/dandi-cache-utils:latest
 LABEL org.opencontainers.image.source="https://github.com/dandi-cache/<cache-name>"
 LABEL org.opencontainers.image.description="The pinned runtime environment for the DANDI Cache <cache-name> update pipeline."
 
-# This cache's own processing dependencies. Delete these two lines if it has none beyond what the
-# base image already provides.
+# This cache's own processing dependencies, installed whether or not it has any. A cache that
+# declares none resolves to an empty install, so keeping these lines costs one no-op layer, and
+# nothing here has to be decided per cache.
+#
+# They used to be conditional -- "delete these two lines if this cache has no dependencies beyond
+# the base image" -- which made the image's contents a judgement that had to stay in agreement with
+# `envs/pyproject.toml`. It stopped agreeing exactly once: a cache kept the declaration, lost the
+# install, and its `import` failed at the next scheduled update rather than at build time. An
+# unconditional step cannot drift.
+#
+# pip cannot read [project.dependencies] without building the project, so install the (virtual)
+# project from a throwaway build directory.
 COPY envs/pyproject.toml /tmp/build/pyproject.toml
-RUN pip install /tmp/build && rm -rf /tmp/build
+RUN pip install /tmp/build \
+    && rm -rf /tmp/build
 
 CMD ["python", "--version"]
