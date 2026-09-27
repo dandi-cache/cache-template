@@ -46,7 +46,8 @@ name = "<input-cache-name>"
 #
 # `testing_limit` is the same number for `--testing`: the smallest batch that still exercises this
 # operation end to end. Pick it from what one item costs -- two for a cache that streams an NWB
-# file, ten for one that reads a small object -- rather than taking the default of 10.
+# file, ten for one that reads a small object. There is no default: without one, `--testing` runs
+# the ordinary batch and changes only where it writes.
 #
 # The one cache that declares no limit is the one with nothing to meter: a filter or a join over
 # inputs already in hand, which does all of its work every run. Say so in a comment here if that
