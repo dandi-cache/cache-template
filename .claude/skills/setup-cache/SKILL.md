@@ -72,13 +72,18 @@ That is the whole point of it being there.
   Choosing the wrong one is a real bug, which is why the runner makes you say which.
 - **Use the library's DANDI operations rather than writing your own**: `dandi_cache.s3` (unsigned client, content-addressed blob keys, Dandiset manifests, `concurrent_map`), `dandi_cache.api` (tokenless asset resolution), and `dandi_cache.nwb` (remote HDF5 and Zarr readers, the structural walk, the NWB Inspector).
   Tab-completion on those modules lists exactly what they offer.
-- **A cache that rebuilds from scratch** — a pure filter or reshaping of its input, with no per-item work — uses `dandi_cache.run_full_rebuild` instead of `run_incremental_update`.
+- **A cache that rebuilds from scratch** — a derivation of its inputs with no per-item work worth resuming — uses `dandi_cache.run_full_rebuild` instead of `run_incremental_update`.
   Do not reimplement incrementality it does not need.
+  `run_full_rebuild` takes no `limit`, deliberately: a limit bounds work, never output, and capping the records on the way out would delete the rest of the cache from every consumer.
+  A rebuild cache that does bounded work — reading manifests, fetching metadata — applies `dataset.limit(arguments.limit)` to what it *fetches*, and still publishes everything it knows.
 - **A second entry point** (e.g. a `refresh` that re-assesses what is already recorded) gets its own script and an `[operations.<name>]` entry in `cache.toml`, plus a job in `update.yml` whose step passes `operation: <name>`.
 - Add this cache's processing dependencies to `envs/pyproject.toml`.
   Leave `datalad` and `datalad-container` out: they run on the runner, from the pipeline's own pinned requirements, never inside the image.
 - `--testing` and `--limit` come from the shared command line; do not add your own.
   Testing mode writes `testing_`-prefixed files and can never touch the real cache, because only the outputs declared in `cache.toml` are published.
+- **Declare how much work one run does.** `[operations.update] limit` is how many items a scheduled run gets through, and `dataset.limit(arguments.limit)` resolves it — never read `arguments.limit` directly, and never apply it to the published records.
+  `testing_limit` beside it is the smallest batch that still exercises the operation: pick it from what one item costs, two for a cache that streams an NWB file and ten for one that reads a small object.
+  Leave `limit` out only when this cache genuinely has nothing to meter — a filter or a join over inputs already in hand — and say so in a comment, so the absence reads as a decision rather than an oversight.
 
 ## 4. Verify before merging
 
