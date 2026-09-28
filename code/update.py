@@ -32,7 +32,8 @@ def main() -> None:
         dataset,
         candidates=candidates,
         process=process,
-        limit=dandi_cache.effective_limit(testing=dataset.testing, limit=arguments.limit),
+        # From `[operations.update]` in cache.toml: how many items this run works through.
+        limit=dataset.limit(arguments.limit),
         # `SKIP` leaves a failure unrecorded so a later run retries it -- right when the work is
         # known to be possible and a failure is almost always transient. `RECORD` writes
         # `failure_value` so the item is never retried -- right when the failure is the answer.

@@ -39,10 +39,22 @@ name = "<input-cache-name>"
 # Entry points. `update` always exists and defaults to `code/update.py`; declare extras only when
 # this cache genuinely has one, such as a `refresh` that re-assesses what it already recorded.
 #
-# `limit` is the default batch size for a complete run. Set it only for a cache too heavy to clear
-# its backlog in one run; most caches should be incremental and leave it unset.
-# [operations.update]
-# limit = 500
+# Declare a `limit`. It is how many items one scheduled run works through, which is how a cache
+# meters itself: running often enough is what clears the backlog, and each run still publishes the
+# complete cache. A limit bounds *work*, never output -- so it is applied when choosing the batch,
+# never to the records on the way out, which would delete the rest of the cache from consumers.
+#
+# `testing_limit` is the same number for `--testing`: the smallest batch that still exercises this
+# operation end to end. Pick it from what one item costs -- two for a cache that streams an NWB
+# file, ten for one that reads a small object. There is no default: without one, `--testing` runs
+# the ordinary batch and changes only where it writes.
+#
+# The one cache that declares no limit is the one with nothing to meter: a filter or a join over
+# inputs already in hand, which does all of its work every run. Say so in a comment here if that
+# is this cache, so the absence reads as a decision.
+[operations.update]
+limit = 500
+testing_limit = 2
 
 
 # The published branches describe this repository as a BIDS study dataset, through a
