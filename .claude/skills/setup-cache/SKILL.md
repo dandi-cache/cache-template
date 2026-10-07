@@ -84,6 +84,12 @@ That is the whole point of it being there.
 - **Declare how much work one run does.** `[operations.update] limit` is how many items a scheduled run gets through, and `dataset.limit(arguments.limit)` resolves it — never read `arguments.limit` directly, and never apply it to the published records.
   `testing_limit` beside it is the smallest batch that still exercises the operation: pick it from what one item costs, two for a cache that streams an NWB file and ten for one that reads a small object.
   Leave `limit` out only when this cache genuinely has nothing to meter — a filter or a join over inputs already in hand — and say so in a comment, so the absence reads as a decision rather than an oversight.
+- **Estimate how large each output will grow, against GitHub's 100 MiB limit for one file.** `derivatives` is plain git, and a push carrying a file over 100 MiB is refused after the run's work is done, on every run until it is fixed.
+  Multiply the bytes of one entry by the number of entries at full coverage of the archive.
+  If any output could come within reach of 100 MB, declare it in `split` under `[cache]` from the start: it is then kept on `derivatives` as sixteen files by the first digit of the content ID, with no change to `code/update.py`, and `dist` still publishes it as one compressed file.
+  Only an output keyed by content ID can be split.
+  The pipeline reports any file past 80% of the limit on every run, and emails it, so a cache that grows faster than expected is caught; declaring `split` later is a one-line change whose first run migrates the existing file.
+  An output that would pass 100 MiB even compressed, or that sixteen files would not bring well under it, needs a different design; raise it before building.
 
 ## 4. Verify before merging
 

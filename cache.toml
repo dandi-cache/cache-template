@@ -17,6 +17,11 @@ name = "<cache-name>"
 # what keeps a `testing_`-prefixed smoke-run artifact from ever reaching consumers.
 # outputs = ["<cache_name>.jsonl"]
 
+# GitHub refuses any file over 100 MiB, so an output that could grow near it as one file is kept on
+# `derivatives` as sixteen, by the first digit of the content ID. `dist` still publishes it as one
+# compressed file, and the update code does not change. Only an output keyed by content ID can split.
+# split = ["<cache_name>.jsonl"]
+
 
 # Upstream caches, registered as DataLad input subdatasets and pinned in every run's provenance, so
 # each result records the exact input commits it was computed from.
