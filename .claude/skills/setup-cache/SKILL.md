@@ -84,6 +84,12 @@ That is the whole point of it being there.
 - **Declare how much work one run does.** `[operations.update] limit` is how many items a scheduled run gets through, and `dataset.limit(arguments.limit)` resolves it — never read `arguments.limit` directly, and never apply it to the published records.
   `testing_limit` beside it is the smallest batch that still exercises the operation: pick it from what one item costs, two for a cache that streams an NWB file and ten for one that reads a small object.
   Leave `limit` out only when this cache genuinely has nothing to meter — a filter or a join over inputs already in hand — and say so in a comment, so the absence reads as a decision rather than an oversight.
+- **Open each file in a child process, not in the run's own.** HDF5, pynwb and the NWB Inspector keep what they allocate, so one process that opens and inspects files grows with every file, about 5 MB each, and never shrinks.
+  A batch of 2500 reached 10 GB and was killed on a 16 GB runner after stalling for most of an hour, and a killed run publishes nothing, so the 2200 results it had checkpointed were lost.
+  Do the opening and the analysis in `dandi_cache.run_isolated(function, arguments=..., timeout_seconds=...)`, returning only plain data, and size the timeout from the slowest item you saw plus a wide margin: it is for a stream that hangs, not a slow file.
+  Import `h5py` and `pynwb` in the parent first, so each forked child inherits them instead of importing them again for every file.
+  A cache that only reads small objects or metadata does not need this.
+  `run_incremental_update` stops a batch and writes it if memory still gets within a quarter of the machine's, which saves the work but does not fix the growth.
 - **Estimate how large each output will grow, against GitHub's 100 MiB limit for one file.** `derivatives` is plain git, and a push carrying a file over 100 MiB is refused after the run's work is done, on every run until it is fixed.
   Multiply the bytes of one entry by the number of entries at full coverage of the archive.
   If any output could come within reach of 100 MB, declare it in `split` under `[cache]` from the start: it is then kept on `derivatives` as sixteen files by the first digit of the content ID, with no change to `code/update.py`, and `dist` still publishes it as one compressed file.
