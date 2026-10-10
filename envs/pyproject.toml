@@ -9,6 +9,8 @@
 # exists so that pip has something to install the dependencies below from, and `<cache-name>` is
 # not a name pip accepts, so the image could never be built while it stood here.
 name = "cache-environment"
+# A placeholder, not a release number, and never bumped. A cache is versioned by the code commit
+# and image digest that every run records in its commit on `derivatives`.
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
