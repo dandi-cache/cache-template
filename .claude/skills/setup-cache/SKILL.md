@@ -90,12 +90,11 @@ That is the whole point of it being there.
   Import `h5py` and `pynwb` in the parent first, so each forked child inherits them instead of importing them again for every file.
   A cache that only reads small objects or metadata does not need this.
   `run_incremental_update` stops a batch and writes it if memory still gets within a quarter of the machine's, which saves the work but does not fix the growth.
-- **Estimate how large each output will grow, against GitHub's 100 MiB limit for one file.** `derivatives` is plain git, and a push carrying a file over 100 MiB is refused after the run's work is done, on every run until it is fixed.
-  Multiply the bytes of one entry by the number of entries at full coverage of the archive.
-  If any output could come within reach of 100 MB, declare it in `split` under `[cache]` from the start: it is then kept on `derivatives` as sixteen files by the first digit of the content ID, with no change to `code/update.py`, and `dist` still publishes it as one compressed file.
-  Only an output keyed by content ID can be split.
-  The pipeline reports any file past 80% of the limit on every run, and emails it, so a cache that grows faster than expected is caught; declaring `split` later is a one-line change whose first run migrates the existing file.
-  An output that would pass 100 MiB even compressed, or that sixteen files would not bring well under it, needs a different design; raise it before building.
+- **Know how an output is stored.** Every output is kept on `derivatives` as a Zarr store, `<name>.zarr`, that only grows by appending, in plain-text chunks of at most `chunk_bytes` (80 MB by default), so no output can outgrow GitHub's 100 MiB limit for one file and there is nothing to declare or bump. `code/update.py` is not about it: `read_output_lookup`, `write_output_lookup`, `merge_output_lookup`, `read_output_ids` and `write_output_ids` read and write it.
+  A record that is a single line longer than a chunk cannot be stored; raise `chunk_bytes` in `cache.toml`, within the limit, for an output whose one entry can be that large.
+  A replaced entry is a new line and the last one wins, and the library compacts the store once enough of it is superseded. A cache that rewrites its whole output every run costs nothing extra: only what changed is appended.
+  Read an output by its name and never by a path under `derivatives/`, which is a store and not a file.
+  The pipeline reports any file past 80% of the limit on every run, and emails it.
 
 ## 4. Verify before merging
 

@@ -17,10 +17,11 @@ name = "<cache-name>"
 # what keeps a `testing_`-prefixed smoke-run artifact from ever reaching consumers.
 # outputs = ["<cache_name>.jsonl"]
 
-# GitHub refuses any file over 100 MiB, so an output that could grow near it as one file is kept on
-# `derivatives` as sixteen, by the first digit of the content ID. `dist` still publishes it as one
-# compressed file, and the update code does not change. Only an output keyed by content ID can split.
-# split = ["<cache_name>.jsonl"]
+# Every output is kept as a Zarr store, `derivatives/<name>.zarr`, that only grows by appending, in
+# plain-text chunks of at most `chunk_bytes` (80 MB by default, and the longest record an output can
+# hold), so no output ever holds a file near GitHub's 100 MiB limit. Nothing to declare unless the
+# chunks need another size.
+# chunk_bytes = 80000000
 
 
 # Upstream caches, registered as DataLad input subdatasets and pinned in every run's provenance, so
