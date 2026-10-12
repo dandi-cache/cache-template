@@ -12,13 +12,33 @@ Primarily for use by developers.
 
 ## One-time use
 
-`dist` publishes each output as a [Zarr](https://zarr.dev/) store: the cache itself is `derivatives/<cache_name>.zarr/`.
-A store is one array of [JSON Lines](https://jsonlines.org/) text cut into chunk files, each holding whole lines and gzip-compressed.
-It can be read with the standard library alone, or opened remotely with any Zarr library.
+If you only plan to use this cache infrequently or from disparate locations, you can directly download the latest version of the cache as a compressed [JSON Lines](https://jsonlines.org/) file from the `dist` branch.
+Each line is a single-key object, `{"<key>": <value>}`, and each key appears once.
 
 ### Python API (recommended)
 
-The chunk files are gzip-compressed [JSON Lines](https://jsonlines.org/): list them, then read them in order as you would any JSONL files.
+```python
+import gzip
+import json
+import urllib.request
+
+url = "https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.jsonl.gz"
+with urllib.request.urlopen(url) as response:
+    lines = gzip.decompress(response.read()).decode("utf-8").splitlines()
+<cache_name> = {key: value for line in lines if line for key, value in json.loads(line).items()}
+```
+
+### Save to file
+
+```bash
+curl https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.jsonl.gz -o <cache_name>.jsonl.gz
+```
+
+### Outputs past 50 MiB
+
+An output whose compressed file would pass 50 MiB, GitHub's warning size for one file, is published instead as a [Zarr](https://zarr.dev/) store, `derivatives/<cache_name>.zarr/`.
+Its chunk files are gzip-compressed pieces of the same JSON Lines, each holding whole lines, so list them and read them in order.
+[`valid-nwb-file-to-array-sizes`](https://github.com/dandi-cache/valid-nwb-file-to-array-sizes) is a cache published this way.
 
 ```python
 import gzip, json, urllib.request
@@ -28,40 +48,14 @@ files = sorted((entry["download_url"] for entry in json.load(urllib.request.urlo
 <cache_name> = {key: value for url in files for line in gzip.decompress(urllib.request.urlopen(url).read()).decode().splitlines() if line for key, value in json.loads(line).items()}
 ```
 
-### Remote Zarr store
-
-Anything that opens Zarr can open the store over HTTP, reading only the chunks it needs.
-The group's `zarr.json` carries the array's metadata, so opening it takes one request:
-
-```bash
-pip install "zarr>=3" fsspec aiohttp
-```
+Any Zarr library can also open the store over HTTP and fetch only the chunks it needs.
 
 ```python
-import json
-
-import zarr
+import zarr  # pip install "zarr>=3" fsspec aiohttp
 
 url = "https://raw.githubusercontent.com/dandi-cache/<cache-name>/refs/heads/dist/derivatives/<cache_name>.zarr"
 stream = zarr.open_group(url, mode="r")["stream"]
-print(stream.shape, stream.chunks)  # Bytes in all, and bytes per chunk.
-
-# The first chunk, fetched and decompressed on its own: whole lines, each `{"<key>": <value>}`.
 first_chunk = stream[: stream.chunks[0]].tobytes().decode("utf-8")
-for line in first_chunk.splitlines():
-    if line.strip():
-        print(json.loads(line))
-        break
-```
-
-Reading `stream[:]` returns the whole text; to read it in pieces, step through it by `stream.chunks[0]`, as each chunk is fetched whole.
-
-### Save to file
-
-A raw URL cannot be listed, so to fetch every chunk at once clone the `dist` branch, which holds nothing else:
-
-```bash
-git clone --branch dist --depth 1 https://github.com/dandi-cache/<cache-name>.git
 ```
 
 
